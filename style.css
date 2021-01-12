@@ -1,0 +1,7 @@
+.leaflet-top{z-index:0;}
+.leaflet-control-layers{opacity:  0.9;}
+.selectize-control.multi .selectize-input > div {background-color:orange}
+.selectize-input {font-size: 10px}
+.selectize-input items not-full has-options has-items{background-color: orange}
+.js-irs-2 .irs-single, .js-irs-2 .irs-bar-edge, .js-irs-2 .irs-bar,.js-irs-2 .irs-to,.js-irs-2 .irs-from  {background: orange ;border-top: 1px solid orange ; border-bottom: 1px solid orange}
+.js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar,.js-irs-1 .irs-to,.js-irs-1 .irs-from  {background: orange ;border-top: 1px solid orange ; border-bottom: 1px solid orange}
