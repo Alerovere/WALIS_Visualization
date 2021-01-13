@@ -844,7 +844,7 @@ server <- function(input, output) {
           Elevation.error..m. <= inp_elevation[2]
       )
     print(paste("NROW(DF_sub)", nrow(df_sub)))
-    df_sub$Perc_Paleo_RSL_uncertainty <- df_sub[[low_rsl]] - df_sub[[upp_rsl]]
+    df_sub$Perc_Paleo_RSL_uncertainty <- abs(df_sub[[low_rsl]] - df_sub[[upp_rsl]])
     
     print(quantile(df_sub$Perc_Paleo_RSL_uncertainty, seq(0, 1, 0.05), na.rm =
                      TRUE))
@@ -853,8 +853,8 @@ server <- function(input, output) {
       df_sub,
       subset =  is.na(Perc_Paleo_RSL_uncertainty) == FALSE &
         (
-          Perc_Paleo_RSL_uncertainty < inp_elev_uncert[1] |
-            Perc_Paleo_RSL_uncertainty > inp_elev_uncert[2]
+          Perc_Paleo_RSL_uncertainty <= inp_elev_uncert[1] |
+            Perc_Paleo_RSL_uncertainty >= inp_elev_uncert[2]
         )
     )
     print(paste("NROW(DF_sub_sli)", nrow(df_sub_sli)))
