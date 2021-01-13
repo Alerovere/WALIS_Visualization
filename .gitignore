@@ -1,0 +1,8 @@
+# History files
+.Rhistory
+# R Environment Variables
+.Renviron
+# General
+.DS_Store
+# CSV(temporal)
+.csv
