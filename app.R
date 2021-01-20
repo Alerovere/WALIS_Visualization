@@ -19,34 +19,16 @@ library(ggiraph)
 # Load data
 # Define UI
 
-rsl_indicator <-
-  c(
-    'Beach face',
-    'Beach ridge',
-    'Tidal notch',
-    'Single Coral',
-    'Marine Terrace',
-    'Shore platform',
-    'Coastal barrier',
-    'Estuary deposit',
-    'Lagoonal deposit',
-    'Foreshore deposits',
-    'Beach swash deposit',
-    'Ophiomorpha burrow ',
-    'Basal Peat (non-mangrove)',
-    'Beach deposit or beachrock',
-    'Shallow water coral reef facies',
-    'Lithophyllum Byssoides algal rims',
-    'Shallow or intertidal marine fauna',
-    'Upper limit of Lithophaga boreholes ',
-    'Coral reef terrace (general definition)',
-    'Drowned valley floor Transgressive Contact',
-    'Isolation Basin (moment of marine connection)',
-    'Tidal inlet facies (Western Cape, South Africa)',
-    'Estuarine Terrace (preserved tidal flat surface)',
-    'Bioerosional and erosional markers on limestone cliff',
-    'The datapoint is a marine or terrestrial limiting indicator'
-  )
+
+
+latest_walis<-"http://www.warmcoasts.eu/sealevel/RSLmap/analysis_summary.csv"
+rsl_summary_file <-"data/walis.csv"
+
+download.file(latest_walis, rsl_summary_file)
+rsl_summary <- read.csv(rsl_summary_file)
+
+rsl_indicator <- unique(rsl_summary$RSL.Indicator)
+
 rsl_indicator <-
   rsl_indicator[order(nchar(rsl_indicator), rsl_indicator)]
 
@@ -729,7 +711,7 @@ server <- function(input, output) {
     return(selected_type)
   })
   
-  rsl_summary <- read.csv("data/extended.csv")
+        rsl_summary <- read.csv(rsl_summary_file)
   df <-
     st_as_sf(rsl_summary,
              coords = c("Longitude", "Latitude"),
@@ -848,7 +830,7 @@ server <- function(input, output) {
     
     print(quantile(df_sub$Perc_Paleo_RSL_uncertainty, seq(0, 1, 0.05), na.rm =
                      TRUE))
-    
+      
     df_sub_sli <- subset(
       df_sub,
       subset =  is.na(Perc_Paleo_RSL_uncertainty) == FALSE &
@@ -925,9 +907,8 @@ server <- function(input, output) {
         dashboardLabel(
           paste(
             "RSL Indicator types (",
-            length(input$type_indicators),
-            "/25)"
-          ),
+            length(input$type_indicators),"/",length(rsl_indicator),")")
+          ,
           status = "warning",
           style = "square"
         )
@@ -1012,9 +993,8 @@ server <- function(input, output) {
         dashboardLabel(
           paste(
             "RSL Indicator types (",
-            length(input$type_indicators),
-            "/25)"
-          ),
+            length(input$type_indicators),"/",length(rsl_indicator),")")
+          ,
           status = "warning",
           style = "square"
         ),
