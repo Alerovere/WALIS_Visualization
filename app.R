@@ -1328,6 +1328,7 @@ server <- function(input, output) {
           sea_level[[upp_age]],
           ifelse(sea_level["Timing.constraint"] == "Older than", sea_level[[low_age]], NA)
         )
+      
       sea_level$end <-
         ifelse(
           sea_level["Timing.constraint"] == "Younger than",
@@ -1337,7 +1338,7 @@ server <- function(input, output) {
       
       sea_level_younger <-
         subset(sea_level, subset = Timing.constraint == "Younger than")
-      print(paste0(nrow(sea_level_younger), " <-sea_level_younger"))
+      
       sea_level_older <-
         subset(sea_level, subset = Timing.constraint == "Older than")
       
@@ -1351,11 +1352,8 @@ server <- function(input, output) {
       
       rsl_global_min <- min(min_rsl)
       rsl_global_max <- max(max_rsl)
-      print(paste0("min_rsl-> ",min_rsl))
-      print(paste0("max_rsl-> ",max_rsl))
       
       arrow_factor <- (rsl_global_max - rsl_global_min) * 0.075
-      print(paste0("arrow_factor-> ",arrow_factor))
       
       if (arrow_factor == 0) {
         arrow_factor <- 5
@@ -1364,8 +1362,8 @@ server <- function(input, output) {
       sl_colors <-
         c(
           "Equal to" = "cyan",
-          "Older than" = "orange",
-          "Younger than" = "purple"
+          "Older than" = "purple",
+          "Younger than" = "orange"
         )
       lim_colors <-
         c(
@@ -1416,8 +1414,8 @@ server <- function(input, output) {
           data = sea_level_younger,
           aes(
             y = eval(parse(text = rsl)),
-            x = start,
-            xend = end,
+            x = end,
+            xend = start,
             yend = eval(parse(text = rsl)),
             tooltip = WALIS_ID,
             group = Timing.constraint,
@@ -1429,8 +1427,8 @@ server <- function(input, output) {
           data = sea_level_older,
           aes(
             y = eval(parse(text = rsl)),
-            x = end,
-            xend = start,
+            x = start,
+            xend = end,
             yend = eval(parse(text = rsl)),
             tooltip = WALIS_ID,
             group = Timing.constraint,
