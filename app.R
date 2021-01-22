@@ -3,15 +3,14 @@ library(shiny)
 library(shinydashboard)
 library(shinydashboardPlus)
 library(shinythemes)
+library(shinyWidgets)
+library(readr)
 library(DT)
 library(dplyr)
-library(readr)
-library(shinyWidgets)
 library(leaflet)
 library(leaflet.extras)
 library(sf)
-library(ggplot2)
-library(grid)  
+library(ggplot2) 
 library(gtable) 
 library(ggnewscale)
 library(ggiraph)
@@ -19,10 +18,8 @@ library(ggiraph)
 # Load data
 # Define UI
 
-
-
 latest_walis<-"http://www.warmcoasts.eu/sealevel/RSLmap/analysis_summary.csv"
-rsl_summary_file <-"data/walis.csv"
+rsl_summary_file <-"walis.csv"
 
 download.file(latest_walis, rsl_summary_file)
 rsl_summary <- read.csv(rsl_summary_file)
@@ -711,13 +708,14 @@ server <- function(input, output) {
     return(selected_type)
   })
   
-        rsl_summary <- read.csv(rsl_summary_file)
+  rsl_summary <- read.csv(rsl_summary_file)
   df <-
     st_as_sf(rsl_summary,
              coords = c("Longitude", "Latitude"),
              crs = 4326)# %>% st_jitter(factor = 0.001)
   #Patch
   df[df$Timing.constraint == "Equal to ", "Timing.constraint"] = "Equal to"
+  df<-df[is.na(df$Elevation..m.) == FALSE,]
   
   groups = unique(df$Type.of.datapoint)
   df$Type.of.datapoint <- factor(df$Type.of.datapoint)
@@ -825,12 +823,9 @@ server <- function(input, output) {
           Elevation.error..m. >= inp_elevation[1] &
           Elevation.error..m. <= inp_elevation[2]
       )
-    print(paste("NROW(DF_sub)", nrow(df_sub)))
+
     df_sub$Perc_Paleo_RSL_uncertainty <- abs(df_sub[[low_rsl]] - df_sub[[upp_rsl]])
     
-    print(quantile(df_sub$Perc_Paleo_RSL_uncertainty, seq(0, 1, 0.05), na.rm =
-                     TRUE))
-      
     df_sub_sli <- subset(
       df_sub,
       subset =  is.na(Perc_Paleo_RSL_uncertainty) == FALSE &
@@ -839,11 +834,10 @@ server <- function(input, output) {
             Perc_Paleo_RSL_uncertainty >= inp_elev_uncert[2]
         )
     )
-    print(paste("NROW(DF_sub_sli)", nrow(df_sub_sli)))
     df_sub_final <-
       df_sub[setdiff(rownames(df_sub), rownames(df_sub_sli)), ]
     
-    print(paste("NROW(DF_sub_final)", nrow(df_sub_final)))
+    print(paste("RSL (after filters)", nrow(df_sub_final)))
     
     return(df_sub_final)
   })
@@ -1188,6 +1182,7 @@ server <- function(input, output) {
         sub_data <- data
       }
       data_in_area$data <- sub_data
+      print(paste0("RSL in area:",nrow(data_in_area$data)))
       return("Change")
     })
   
@@ -1200,11 +1195,6 @@ server <- function(input, output) {
       options = list(opts_zoom(max = 5), opts_tooltip(use_fill = TRUE))
     )
   })
-  
-  download <- function(filename){
-    
-  }
-  
   
   output$downloadDataTable <- downloadHandler(
     filename = function() {
@@ -1361,8 +1351,11 @@ server <- function(input, output) {
       
       rsl_global_min <- min(min_rsl)
       rsl_global_max <- max(max_rsl)
+      print(paste0("min_rsl-> ",min_rsl))
+      print(paste0("max_rsl-> ",max_rsl))
       
       arrow_factor <- (rsl_global_max - rsl_global_min) * 0.075
+      print(paste0("arrow_factor-> ",arrow_factor))
       
       if (arrow_factor == 0) {
         arrow_factor <- 5
