@@ -1,6 +1,7 @@
 # Visualization and data query for the WALIS database
 This is the code for a shiny app that takes the data from the WALIS database (https://warmcoasts.eu/world-atlas.html#). The code was prepared by Sebastian Garzòn (https://github.com/SbastianGarzon) under the supervision of A. Rovere.
-The interface shows the results of a script that summarizes the output of the WALIS sea level database as follows, starting from the "Summary" table in the database.
+
+The interface shows the results of a script (running offline) that summarizes the output of the WALIS sea level database as follows, starting from the "Summary" table in the database.
 
 ## Calculate RSL percentiles
 The script takes information on relative sea level values and calculates RSL percentiles in the following way.
@@ -29,3 +30,9 @@ Then, the script takes information on age values and calculates age percentiles 
 | Stratigraphic constraint / Only MIS reported| Upper and lower age derived from the MIS to which the sample is associated with | Lower age |<--|--|--| Uniform distribution |--|--|-->| Upper age |
 | Other age constraint / Age reported| Upper and lower age derived from the reported age | Lower age |<--|--|--| Uniform distribution |--|--|-->| Upper age |
 | Other age constraint / Only MIS reported| Upper and lower age derived from the MIS to which the sample is associated with | Lower age |<--|--|--| Uniform distribution |--|--|-->| Upper age |
+
+## Delete rows and raise an exception
+1. If the RSL is "null"
+2. If the RSL error is "null"
+3. If there is no age associated with the datapoint
+
