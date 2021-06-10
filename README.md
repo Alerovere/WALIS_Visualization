@@ -1,2 +1,1 @@
-# WALIS_Visualization
-Visualization interface for the WALIS database
+# Visualization and data query for the WALIS database
