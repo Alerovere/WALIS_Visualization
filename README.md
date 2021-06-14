@@ -1,4 +1,7 @@
 # Visualization and data query for the WALIS database
+
+[![DOI](https://zenodo.org/badge/329045377.svg)](https://zenodo.org/badge/latestdoi/329045377)
+
 This is the code for a shiny app that takes the data from the WALIS database (https://warmcoasts.eu/world-atlas.html#). The code was prepared by Sebastian Garzòn (https://github.com/SbastianGarzon) under the supervision of A. Rovere.
 
 The interface shows the results of a script (running offline) that summarizes the output of the WALIS sea level database as follows, starting from the "Summary" table in the database.
