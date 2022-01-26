@@ -39,3 +39,5 @@ Then, the script takes information on age values and calculates age percentiles 
 2. If the RSL error is "null"
 3. If there is no age associated with the datapoint
 
+## Funding
+This software is part of a project that has received funding from the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation programme (Grant agreement No. ERC-StG-802414)
