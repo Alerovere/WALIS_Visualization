@@ -41,7 +41,7 @@ link-citations: true
 # Select an interactive or static version of the poster
 # For interactive set interactive <- TRUE
 # For an static set <- FALSE
-interactive <- TRUE
+interactive <- FALSE
 ```
 
 
