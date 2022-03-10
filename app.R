@@ -15,6 +15,9 @@ library(gtable)
 library(ggnewscale)
 library(ggiraph)
 
+# SF configuration
+sf::sf_use_s2(FALSE)
+
 # Load data
 # Define UI
 
