@@ -657,8 +657,52 @@ ui <-
         br(),
         fluidRow(column(12, DT::dataTableOutput("table",width="100%"))
         ))
+    ),
+    
+    # DELETE - AREA DE TRABAJO  
+    
+    tabPanel(title = "Merge SLIP",
+             value = "merge_slip",
+             icon = icon("compress-arrows-alt"),
+             fluidPage(
+               sidebarLayout(sidebarPanel = sidebarPanel(fluidRow(column(12,
+                            p(strong('SLIPs merging'), style = "font-size:26px;"),
+                            p(strong('Current selection'), style = "font-size:22px;"),
+                            fluidRow(column(6,leafletOutput("minimap_2",height = 100)
+                                   ),
+                                   column(6,uiOutput('panel_4'))),
+                            p(strong('SLIP Filtering and merging options'), style = "font-size:22px;"),
+                            fluidRow(
+                              column(4,
+                                     uiOutput("panel_3")),
+                              column(4,
+                                            pickerInput(
+                                              inputId = "sampling_strategy",
+                                              label = "Sampling strategy", 
+                                              choices = c("Peak sampling", "Regular sampling"),
+                                              options = list(
+                                                style = "btn-primary")
+                                            )
+                                            ),
+                                     column(4,
+                                            sliderInput("points_per_slip",
+                                                        "Points per sea level index point:",
+                                                        min = 100,
+                                                        max = 10000,
+                                                        step=100,
+                                                        value = 1000),
+                                            options = list(style='btn-primary'))
+                                                    )
+                             
+                            )),width = 5)
+               ,
+               mainPanel=mainPanel(fluidRow(column(12,
+                                girafeOutput("mygraph2", width = "100%"))
+               )
+             ,width = 7)))
     )
   )
+
 
 # Define server function
 
@@ -1007,6 +1051,50 @@ server <- function(input, output) {
     ))
   })
   
+  output$panel_3 <- renderUI({
+    data_in_area_selection <- data_in_area$data %>%st_drop_geometry()
+    pickerInput(
+    inputId = "slip_selection",
+    label = "Sea level index points:", 
+    choices = unique(data_in_area_selection[data_in_area_selection$Type.of.datapoint=='Sea Level Indicator','WALIS_ID']),
+    selected = unique(data_in_area_selection[data_in_area_selection$Type.of.datapoint=='Sea Level Indicator','WALIS_ID']),
+    multiple = TRUE,
+    options = list(`actions-box` = TRUE))
+    }
+    )
+  
+  output$panel_4 <- renderUI(
+    fluidPage(fluidRow(
+             dashboardLabel(
+               paste("Sea level index points",
+                 nrow(unique(data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint=='Sea Level Indicator','WALIS_ID']))),
+               status = "success",
+               style = "square"
+             )),
+             fluidRow(column(10,
+                             dashboardLabel(
+                               paste('\u229e', ' Equal to:',
+                                 nrow(unique(data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint=='Sea Level Indicator' & data_in_area_merging$data$Timing.constraint =='Equal to','WALIS_ID']))),
+                               status = "success",
+                               style = "square"
+                             ))),
+             fluidRow(dashboardLabel(
+               paste(nrow(data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint=='Terrestrial Limiting',]),' - Terrestrial Limiting'),
+               status = "danger",
+               style = "square"
+             )),
+             fluidRow(dashboardLabel(
+               paste(nrow(data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint=='Marine Limiting',]),' - Marine Limiting'),
+               color = "navy",
+               status= "primary",
+               style = "square"
+               ))
+      )
+    )
+
+  
+  
+  
   output$table <- DT::renderDataTable({
     data <- data_in_area$data %>% dplyr::mutate(longitude = sf::st_coordinates(.)[,1],
                                                 latitude = sf::st_coordinates(.)[,2]) %>% st_drop_geometry()
@@ -1060,6 +1148,16 @@ server <- function(input, output) {
     polygon <- st_polygon(list(matrix_area)) %>% st_sfc(crs = 4326)
     l <- leaflet(polygon) %>% addTiles()%>% addPolygons(color = "green",popup ="Selected area")})
   
+  output$minimap_2 <- renderLeaflet({
+    df_area<-area$coord
+    matrix_area <- data.matrix(df_area)
+    polygon <- st_polygon(list(matrix_area)) %>% st_sfc(crs = 4326)
+    # Remove Leaflet attribution to improve the visualization of miniature
+    # Other maps display the attribution 
+    # Leaflet | © OpenStreetMap contributors, CC-BY-SA
+    
+    l <- leaflet(polygon,options = leafletOptions(attributionControl=FALSE,zoomControl = FALSE)) %>% addTiles()%>% addPolygons(color = "green",popup ="Selected area")})
+
   observe({
     if (nrow(data()) == 0) {
       leafletProxy("mymap") %>%
@@ -1189,6 +1287,30 @@ server <- function(input, output) {
       return("Change")
     })
   
+  
+  data_in_area_merging <- reactiveValues(data = data.frame())
+  
+  slip_sel <-
+    reactiveValues(val = c())
+  
+  slip_selected <- observe({
+    selected_slip <- input$slip_selection
+    slip_sel$val <- selected_slip 
+    return(selected_slip)
+  })
+
+  in_area_merging <- observeEvent(c(
+    data_in_area,
+    slip_sel$val),
+    {
+      ids_limiting <- data_in_area$data[data_in_area$data$Type.of.datapoint !='Sea Level Indicator','WALIS_ID']%>%st_drop_geometry()
+      ids_slip <- slip_sel$val
+      ids_selection <- c(unique(ids_limiting$WALIS_ID),ids_slip)
+      data_in_area_merging$data <- data_in_area$data[data_in_area$data$WALIS_ID %in% ids_selection,]
+      return("Change")
+    }
+    )
+  
   output$mygraph <- renderGirafe({
     girafe(
       ggobj = plot_sea_level(
@@ -1199,6 +1321,16 @@ server <- function(input, output) {
     )
   })
   
+  output$mygraph2 <- renderGirafe({
+    girafe(
+      ggobj = plot_sea_level(
+        data_in_area_merging$data,
+        type_sel$val
+      ),
+      options = list(opts_zoom(max = 5), opts_tooltip(use_fill = TRUE))
+    )
+  })
+
   output$downloadDataTable <- downloadHandler(
     filename = function() {
       paste("walis_summary.csv")
