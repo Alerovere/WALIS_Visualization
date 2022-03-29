@@ -2,6 +2,8 @@
 
 [![DOI](https://zenodo.org/badge/329045377.svg)](https://zenodo.org/badge/latestdoi/329045377)
 
+> 
+
 This is the code for a shiny app that takes the data from the WALIS sea-level proxies database (https://alerovere.github.io/WALIS/). The code was prepared by [Sebastian Garzòn](https://github.com/SbastianGarzon) under the supervision of [Alessio Rovere](https://github.com/Alerovere).
 
 The interface shows the results of a jupzter notebook (running offline) that summarizes the data included in WALIS for display in the shiny app. The notebook is included in this repository: https://github.com/Alerovere/WALIS
