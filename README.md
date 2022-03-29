@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/329045377.svg)](https://zenodo.org/badge/latestdoi/329045377)
 
-> 
+> Garzón, Sebastian, & Rovere, Alessio. (2021). WALIS visualization interface (Version 1.0) (v1.0). Zenodo. https://doi.org/10.5281/zenodo.4943541
 
 This is the code for a shiny app that takes the data from the WALIS sea-level proxies database (https://alerovere.github.io/WALIS/). The code was prepared by [Sebastian Garzòn](https://github.com/SbastianGarzon) under the supervision of [Alessio Rovere](https://github.com/Alerovere).
 
