@@ -6,8 +6,10 @@ This is the code for a shiny app that takes the data from the WALIS sea-level pr
 
 The interface shows the results of a jupzter notebook (running offline) that summarizes the data included in WALIS for display in the shiny app. The notebook is included in this repository: https://github.com/Alerovere/WALIS
 
+The app can be accessed at this link. https://warmcoasts.shinyapps.io/WALIS_Visualization/
+
 ## Funding
 This software is part of a project that has received funding from the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation programme (Grant agreement No. [ERC-StG-802414](https://cordis.europa.eu/project/id/802414/it)). Sebastian Garzon was also funded by the Data Stewardship Scholarship, by [PAGES](https://pastglobalchanges.org) (which in turn received support from the Swiss Academy of Sciences and the Chinese Academy of Sciences).
 
 ### Versions
-Garzón, Sebastian, & Rovere, Alessio. (2021). WALIS visualization interface (v1.0). Zenodo. https://doi.org/10.5281/zenodo.4943541
+> Garzón, Sebastian, & Rovere, Alessio. (2021). WALIS visualization interface (v1.0). Zenodo. https://doi.org/10.5281/zenodo.4943541
