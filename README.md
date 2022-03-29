@@ -10,4 +10,4 @@ The interface shows the results of a jupzter notebook (running offline) that sum
 This software is part of a project that has received funding from the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation programme (Grant agreement No. [ERC-StG-802414](https://cordis.europa.eu/project/id/802414/it)). Sebastian Garzon was also funded by the Data Stewardship Scholarship, by [PAGES](https://pastglobalchanges.org) (which in turn received support from the Swiss Academy of Sciences and the Chinese Academy of Sciences).
 
 ### Versions
-> Garzón, Sebastian, & Rovere, Alessio. (2021). WALIS visualization interface (Version 1.0) (v1.0). Zenodo. https://doi.org/10.5281/zenodo.4943541
+Garzón, Sebastian, & Rovere, Alessio. (2021). WALIS visualization interface (v1.0). Zenodo. https://doi.org/10.5281/zenodo.4943541
