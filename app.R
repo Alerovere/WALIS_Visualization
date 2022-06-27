@@ -1,17 +1,18 @@
 # Load packages
 
+## Shiny app packages
 library(shiny)
 library(shinydashboard)
 library(shinydashboardPlus)
 library(shinythemes)
 library(shinyWidgets)
 library("shinycssloaders")
-library(readr)
-library(DT)
-library(dplyr)
 library(leaflet)
 library(leaflet.extras)
 library(shinyjs)
+library(readr)
+library(DT)
+library(dplyr)
 library(sf)
 library(ggplot2)
 library(gtable)
@@ -25,23 +26,30 @@ library(pracma)
 source('r/extract_age.R')
 source('r/extract_rsl.R')
 source('r/join_age_rsl.R')
-source('r/compare_regions.R')
 source('r/define_peaks_ranges.R')
+
+# Set environment for Zip files
+
+Sys.setenv(R_ZIPCMD = "/usr/bin/zip")
 
 # SF configuration
 sf::sf_use_s2(FALSE)
+root_path <- getwd()
 
 # Load data
-# Define UI
 
 latest_walis <-
   "http://www.warmcoasts.eu/sealevel/RSLmap/analysis_summary.csv"
 rsl_summary_file <- "walis.csv"
 sea_level_stack_pratt <- "Data/sea_level_stack_spratt.csv"
 
+## Relevant for local implementations, only download if analysis_summary do not exist
+
 if (!file.exists(rsl_summary_file)) {
   download.file(latest_walis, rsl_summary_file)
 }
+
+## Load Summary table
 
 rsl_summary <- read.csv(rsl_summary_file)
 
@@ -50,16 +58,38 @@ rsl_indicator <- unique(rsl_summary$RSL.Indicator)
 rsl_indicator <-
   rsl_indicator[order(nchar(rsl_indicator), rsl_indicator)]
 
-sl_stack<- read.csv(sea_level_stack_pratt,sep = )
+## Load Stack Pratt
+sl_stack <- read.csv(sea_level_stack_pratt, sep =)
 
-peak_ranges_spratt <- define_peaks_ranges(sl_stack,age_name='Age.ka.',mean_rsl='X50.',width=0.2)
+## Define peak ranges
+peak_ranges_spratt <-
+  define_peaks_ranges(sl_stack,
+                      age_name = 'Age.ka.',
+                      mean_rsl = 'X50.',
+                      width = 0.2)
+
+
+############# WALIS EXPLORER APPLICATION #######################################
+
+################################################################################
+############################## UI  #############################################
+################################################################################
+
+
+# Define UI
 
 ui <-
   navbarPage(
+    ### Title
     title = div(img(src = "walis_logo.png", width = "30")),
     windowTitle = "Walis Explorer" ,
     id = "nav",
     theme = shinytheme("flatly"),
+    
+    ############################
+    ##### INTERACTIVE TAB ######
+    ############################
+    
     tabPanel(
       "Interactive map",
       icon = icon("map"),
@@ -74,6 +104,9 @@ ui <-
           )),
           column(
             1,
+            
+            ### Information dropdownButton
+            
             dropdownButton(
               fluidRow(column(1, img(
                 src = "walis_logo.png", width = "25"
@@ -139,6 +172,20 @@ ui <-
                   ),
                 )
               ),
+              p(
+                strong("Funding:"),
+                br(),
+                ## Funding
+                'This software is part of a project that has received funding from the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation programme (Grant agreement No.',
+                a('ERC-StG-802414', href = 'https://cordis.europa.eu/project/id/802414/it'),
+                '. Sebastian Garzon was also funded by the',
+                a('Data Stewardship Scholarship', href = 'https://pastglobalchanges.org/science/wg/palsea/data'),
+                'by',
+                a('PAGES.', href = 'https://pastglobalchanges.org/'),
+                style = "font-size:12px;text-align:justify"
+              ),
+              a(img(src = 'PAGES-white-highres.jpeg', width = '50%'), href =
+                  'https://pastglobalchanges.org/science/wg/palsea/data'),
               fluidRow(column(
                 10,
                 br(),
@@ -161,6 +208,9 @@ ui <-
               tooltip = tooltipOptions(title = "Info")
             )
           )),
+          
+          ### Message 
+          
           p(
             "Welcome to ",
             strong("WALIS EXPLORER"),
@@ -177,14 +227,22 @@ ui <-
           ),
           #https://github.com/dreamRs/shinyWidgets/blob/master/R/input-sliderText.R
           
+          
+          ### Filters drop down menu (Age / RSL / Geographic extent)
+          
           fluidRow(
             column(
               1,
               offset = 3,
+              
+              # AGE FILTER MENU
               dropdownButton(
                 p(strong("Age filter menu", style = "font-size:20px")),
                 fluidRow(column(
                   8,
+                  
+                  # Age range 
+                  
                   sliderTextInput(
                     inputId = "temp",
                     label = span(tagList(icon("history"), "Age Range")),
@@ -208,6 +266,9 @@ ui <-
                 ,
                 fluidRow(column(
                   7,
+                  
+                  # Percentiles range
+                  
                   radioGroupButtons(
                     justified = FALSE,
                     inputId = "perc_age",
@@ -235,6 +296,9 @@ ui <-
                 )),
                 fluidRow(column(
                   7,
+                  
+                  # Dating techniques
+                  
                   checkboxGroupButtons(
                     inputId = "dating_tech",
                     label = span(tagList(icon("flask"), "Dating techniques:")),
@@ -286,11 +350,15 @@ ui <-
               1,
               offset = 1,
               dropdownButton(
+                
+                #RSL indicator filter menu
+
                 p(strong("RSL Indicator Filter", style = "font-size:20px")),
                 strong("Elevation measurements"),
                 br(),
                 fluidRow(column(
                   8,
+                  # Elevation error menu 
                   sliderTextInput(
                     inputId = "elev_error",
                     label = span(tagList(icon("ruler"), "Elevation error:")),
@@ -308,12 +376,18 @@ ui <-
                     "Select a range of errors associated with the elevation measurement. This variable applies to all types of RSL indicators."
                   )
                 )),
+                
+                #Paleo-RSL menu 
+                
                 strong("Paleo-RSL"),
                 br(),
                 fluidRow(column(
                   6,
                   column(
                     6,
+                    
+                    #Percentiles range
+                    
                     radioGroupButtons(
                       justified = TRUE,
                       inputId = "perc_elev",
@@ -345,6 +419,9 @@ ui <-
                        fluidRow(
                          column(
                            7,
+                           
+                           # Uncertainty (m)
+                           
                            sliderTextInput(
                              inputId = "elev_uncert",
                              label = span(tagList(icon("ruler"), "Uncertainty (m):")),
@@ -366,6 +443,9 @@ ui <-
                        ))),
                 fluidRow(column(
                   10,
+                  
+                  # RSL filter menu 
+                  
                   strong("RSL filter menu"),
                   selectInput(
                     inputId = 'type_indicators',
@@ -393,10 +473,15 @@ ui <-
             column(
               1,
               offset = 1,
+              
+              # Geographic extent menu
+              
               dropdownButton(
                 p(strong("Geographic extent", style = "font-size:20px")),
                 fluidRow(column(
                   6,
+                  
+                  # Area of interest 
                   radioGroupButtons(
                     inputId = "geo",
                     label = "Area of interest:",
@@ -430,10 +515,12 @@ ui <-
                 icon = icon("globe", lib = "glyphicon"),
                 width = "400px",
                 tooltip = tooltipOptions(title = "Geographic extent menu")
-                
               )
             ),
           ),
+          
+          #### SEA LEVEL SECTION
+          
           fluidRow(column(
             10, p(
               span(tagList(icon("water")), style = "color:#000101"),
@@ -443,6 +530,9 @@ ui <-
           ),
           column(
             1,
+            
+            # Dropdown download menu 
+            
             dropdownButton(
               strong("Download menu", style = "font-size:20px"),
               br(),
@@ -522,14 +612,21 @@ ui <-
             
           ))
           ,
-          fluidRow(column(
-            12,
-            withSpinner(girafeOutput("sealevelPlot", width = "100%",
-                         height = "300px"))
-          )),
+          
+          # SEA LEVEL PLOT
+          
+          fluidRow(column(12,
+                          withSpinner(
+                            girafeOutput("sealevelPlot", width = "100%",
+                                         height = "300px")
+                          ))),
+          
+          # PLOT LEGEND
+          
           fluidRow(
             column(
               4,
+              # TERRESTRIAL LIMITING LEGEND  
               strong("Terrestrial Limiting", style = "text-align:center;font-size:10px"),
               fluidRow(
                 column(
@@ -601,6 +698,8 @@ ui <-
                 )
               )
             ),
+            
+            # MARINE LIMITING LEGEND  
             column(
               4,
               strong("Marine Limiting", style = "text-align:center;font-size:10px"),
@@ -673,6 +772,8 @@ ui <-
                 )
               )
             ),
+            
+            # SEA LEVEL INDEX POINT LEGEND  
             column(
               4,
               strong("Sea-level index", style = "text-align:center;font-size:10px"),
@@ -746,8 +847,8 @@ ui <-
         ),
         
         mainPanel = mainPanel(
-          fluidRow(column(12, uiOutput("panel"))),
-          leafletOutput("mymap", height = 550),
+          fluidRow(column(12, uiOutput("inter_tab_infopanel"))),
+          leafletOutput("inter_tab_map", height = 550),
           p(
             "Designed by:",
             a(icon("github"), "sbastiangarzon", href = "https://github.com/sbastiangarzon"),
@@ -759,6 +860,11 @@ ui <-
       )
     )
     ,
+    
+    ##############################
+    ##### SUMMARY TABLE TAB ######
+    ##############################
+    
     tabPanel(
       title = "Summary table",
       value = "Summary_table",
@@ -783,8 +889,9 @@ ui <-
         ,
         fluidRow(
           column(6,
+                 # Filters summary information
                  strong("Filters"),
-                 uiOutput("panel_2")),
+                 uiOutput("sum_tab_information")),
           column(
             4,
             strong(icon("globe", lib = "glyphicon"), "Geographic Extent"),
@@ -871,10 +978,14 @@ ui <-
         ),
         br(),
         fluidRow(column(
-          12, DT::dataTableOutput("table", width = "100%")
+          12, DT::dataTableOutput("summary_tab_table", width = "100%")
         ))
       )
     ),
+    
+    ##############################
+    ###### MERGE SLIP TAB #######
+    ##############################
     
     tabPanel(
       title = "Merge SLIP",
@@ -882,116 +993,264 @@ ui <-
       icon = icon("compress-arrows-alt"),
       dashboardPage(
         dashboardHeader(disable = TRUE),
-        dashboardSidebar(disable= TRUE,collapsed = FALSE,width = '0'),
+        dashboardSidebar(
+          disable = TRUE,
+          collapsed = FALSE,
+          width = '0'
+        ),
         dashboardBody(
-          sidebarLayout(
-            sidebarPanel = sidebarPanel(box(
-              title = "Sea level index point merging", solidHeader = TRUE,width = 12, status = 'navy',
-          fluidRow(
-            column(
-              12,
-              p(strong('Current selection'), style = "font-size:22px;"),
-              leafletOutput("minimap_2", height = 100),
-              p(strong('SLIP Filtering and merging options'), style = "font-size:22px;"),
+          sidebarLayout(sidebarPanel = sidebarPanel(
+            box(
+              title = "Sea level index point merging",
+              solidHeader = TRUE,
+              width = 12,
+              status = 'navy',
+              fluidRow(column(10,
+                              p(
+                                strong('Merging SLIPs'), style = "font-size:22px;"
+                              )),
+                       column(
+                         2,
+                         dropdownButton(
+                           status = "primary",
+                           size = "sm",
+                           icon = icon("info", "fa-1x"),
+                           width = "400px",
+                           tooltip = tooltipOptions(title = "Info"),
+                           fluidRow(column(1, img(
+                             src = "walis_logo.png", width = "25"
+                           )),
+                           column(
+                             11,
+                             strong("The World Atlas of Last Interglacial Shorelines", style = "font-size:15px;")
+                           )),
+                           p(),
+                           strong('SLIPs Merging'),
+                           p(
+                             'The merging process follows the methodology proposed by',
+                             a("Garzon (2022)", href = "https://github.com/SbastianGarzon/sea_level_indicators_and_models/blob/master/Dissertation/docs/_main.pdf"),
+                             '. The process consists of three main steps: \n'
+                           ),
+                           strong('1. Extract RSL and Age parameters \n'),
+                           p(
+                             'The RSL and Age parameters are extracted from each constraint of an individual SLIP. For example, the Age parameters of a SLIP from a radiometric dating are the normal distribution parameters',
+                             strong('\U03BC'),
+                             'and',
+                             strong('\U03C3'),
+                             '.'
+                           ),
+                           strong('2. Assign equal probability to each constraint \n'),
+                           p(
+                             'As a single SLIP can have more than one constraint (e.g multiple dating techniques or analysis), each is assigned an equal probability.'
+                           ),
+                           strong('3. Generate random values with the RSL and Age parameters'),
+                           p(
+                             'For an N number of times, a constraint is selected randomly. Then a random number is generated using the parameters (e.g., \U03BC and \U03C3 for normal distributions) from that constraint.'
+                           ),
+                           p(),
+                           p(
+                             'This process is repeated for all the SLIPs in the selection. The final result is a cloudpoint of Age and RSL values.'
+                           )
+                         )
+                       ))
+              ,
+              
               fluidRow(
-                column(6,
-                       uiOutput("panel_3"),
-                       pickerInput(
-                         inputId = "sampling_strategy",
-                         label = "Sampling strategy",
-                         choices = c("Peak sampling", "Regular sampling"),
-                         selected = 'Regular sampling',
-                         options = list(style = "btn-primary")
-                       )
-                       ),
                 column(
-                  6,
-                  sliderInput(
-                    "points_per_slip",
-                    "Points per sea level index points",
-                    min = 100,
-                    max = 10000,
-                    step = 100,
-                    value = 1000
+                  12,
+                  p(
+                    'In this tab, you can transform the sea-level index points (SLIPs) from your selection into a cloud point of Relative Sea-level (RSL) and Age values.
+                 Only SLIPS with a timing constraint "Equal to"',
+                    strong(icon("plus-square", style = "color:cyan")),
+                    ' can be merged.'
                   ),
-                  options = list(style = 'btn-primary'),
+                  p(strong('Current selection'), style = "font-size:22px;"),
+                  
+                  fluidRow(column(
+                    7,
+                    p(
+                      'The SLIPs in your selection result from the ',
+                      strong(icon("globe", lib = "glyphicon"), "Geographic Extent", style = "color: green"),
+                      "and aditional filters (",
+                      strong(icon("stopwatch"), "Age", style = "color: blue"),
+                      'and',
+                      strong(icon("filter", "glyphicon"), "RSL indicator", style = "color: orange"),
+                      ') from the',
+                      strong(icon("map"), "Interactive map tab.")
+                    )
+                  ),
+                  column(
+                    5, leafletOutput("minimap_2", height = 100)
+                  )),
+                  p(),
+                  fluidRow(column(10,
+                                  p(
+                                    strong('Filtering and merging options'), style = "font-size:22px;"
+                                  )),
+                           #Trabajo
+                           column(
+                             2,
+                             dropdownButton(
+                               status = "primary",
+                               size = "sm",
+                               icon = icon("info", "fa-1x"),
+                               width = "800px",
+                               tooltip = tooltipOptions(title = "Info"),
+                               fluidRow(column(1, img(
+                                 src = "walis_logo.png", width = "25"
+                               )),
+                               column(
+                                 11,
+                                 strong("The World Atlas of Last Interglacial Shorelines", style = "font-size:15px;")
+                               )),
+                               p(),
+                               strong('📐Sampling strategy', style = "font-size:15px;"),
+                               p(),
+                               p(
+                                 'There are two sampling strategies options depending on the SLIPs selection'
+                               ),
+                               strong('- Peak sampling'),
+                               p(
+                                 'This method is only available for SLIPs with Uniform Age distribution that comes from an MIS assignment.
+                                       In this method, the uniform ranges from MIS assignments are modified to match high stand periods defined using the sea-level stack published by',
+                                 a('Spratt and  Lisiecki (2016)', href = 'https://doi.org/10.5194/cp-12-1079-2016'),
+                                 '.'
+                               ),
+                               p(
+                                 'Then a single Uniform range from an MIS assignment could result in multiple (shorter) ranges.'
+                               ),
+                               strong('- Regular sampling'),
+                               p(
+                                 'In this sampling method, the ranges from the Uniform Age distributions are not modified. For selections that only include Age calculations from Radiometric dating, this is the only option.'
+                               ),
+                               p(),
+                               strong('⚈ Points per SLIP', style = "font-size:15px;"),
+                               p(),
+                               p(
+                                 'This is the number of points per individual SLIPs to be sampled. For example, if the user has 3 SLIPs and defines 10.000 points per SLIP ⚈, the resulting cloudpoint will have 30.000 points.'
+                               ),
+                               p(
+                                 'Walis-Explorer limits the number of points per SLIP depending on the number of SLIPs selected. If you want to do analysis beyond our limits, download a',
+                                 strong(icon('docker')),
+                                 'docker container from the Download menu after merging a selection of SLIPs.'
+                               )
+                               
+                             )
+                           ))
+                  
+                  ,
+                  p(
+                    'Define the merging parameters and filter the SLIPs by WALIS ID to generate the cloudpoint. Once you are ready, press',
+                    strong(" \U25B8 Start merging")
+                  ),
                   fluidRow(
-                    column(2,actionButton(inputId = "mergeButton", label = "Go!",style="color: #fff; background-color: #2c3e50;border-color: #FFFFFF"),offset = 7)
-                )),
-                useSweetAlert()
+                    column(6,
+                           uiOutput("merge_tab_samplingstrategy"),
+                           useShinyjs(),
+                           uiOutput('merge_tab_poinsperslip')),
+                    column(6,
+                           uiOutput("merge_tab_slip_filter"),
+                           column(6,
+                                  fluidRow(p(
+                                    ' '
+                                  )),
+                                  fluidRow(
+                                    actionButton(
+                                      inputId = "mergeButton",
+                                      label = "\U25B8 Start merging",
+                                      style = "color: #fff; background-color: #2c3e50;border-color: #FFFFFF"
+                                    )
+                                  )))
+                  ),
+                  useSweetAlert()
+                ),
+                uiOutput('merge_tab_download')
               )
             )
-          ))),
-          
-          mainPanel = mainPanel(box(title = "Sea level plot", solidHeader = TRUE, width = 12, status = 'navy',
-            fluidRow(
-            column(
-          10,
-          withSpinner(girafeOutput("mergePlot", width = "100%",height = '600px'))
-        ),
-        
-        column(2,
-               fluidRow(valueBoxOutput('slip',width = 12)),
-               fluidRow(valueBoxOutput('slip_equal',width = 12)),
-               fluidRow(valueBoxOutput('marine_limiting',width=12)),
-               fluidRow(valueBoxOutput('terrestrial_limiting',width=12))
-               )
-        ),
-        fluidRow(
-          column(
-            8,
-            checkboxGroupButtons(
-              inputId = "elements_merge_indicators",
-              label = "Type of indicators to display:",
-              choices = c(
-                'Marine Limiting \u21A5' = "Marine Limiting",
-                'Terrestrial Limiting \u21A7' = "Terrestrial Limiting",
-                'Sea Level Indicator \u229e' = "Sea Level Indicator"
-              ),
-              selected = c("Marine Limiting", "Terrestrial Limiting", "Sea Level Indicator"),
-              checkIcon = list(
-                yes = icon("ok",
-                           lib = "glyphicon"),
-                no = icon("remove",
-                          lib = "glyphicon")
-              ),
-              status = "primary",
-              justified = TRUE
-            )
           ),
-          column(4,
-                 useShinyjs(),
-                 disabled(
-                   checkboxGroupButtons(
-                     inputId = "elements_merge_cloudpoint",
-                     label = "Cloudpoint elements to display:",
-                     choices = c(
-                       `Cloudpoint <i class="far fa-dot-circle"></i>` = "cloudpoint",
-                       `Density <i class="fas fa-shapes"></i>` = "2ddensity"
-                     ),
-                     selected = c('cloudpoint'),
-                     checkIcon = list(
-                       yes = icon("ok",
-                                  lib = "glyphicon"),
-                       no = icon("remove",
-                                 lib = "glyphicon")
-                     ),
-                     status = "primary",
-                     justified = TRUE
-                   )
-                 )
-        ))
-      ))
-      ))
-      ))
+          
+          mainPanel = mainPanel(
+            box(
+              title = "Sea level plot",
+              solidHeader = TRUE,
+              width = 12,
+              status = 'navy',
+              fluidRow(
+                uiOutput("merge_tab_info_panel"),
+                column(10,
+                       withSpinner(
+                         girafeOutput("mergePlot", width = "100%", height = '600px')
+                       )),
+                
+                column(
+                  2,
+                  fluidRow(valueBoxOutput('slip', width = 12)),
+                  fluidRow(valueBoxOutput('slip_equal', width = 12)),
+                  fluidRow(valueBoxOutput('terrestrial_limiting', width = 12)),
+                  fluidRow(valueBoxOutput('marine_limiting', width = 12)),
+                  fluidRow(valueBoxOutput('cloudpoint', width = 12))
+                )
+              ),
+              fluidRow(column(
+                8,
+                checkboxGroupButtons(
+                  inputId = "elements_merge_indicators",
+                  label = "Type of indicators to display:",
+                  choices = c(
+                    'Marine Limiting \u21A5' = "Marine Limiting",
+                    'Terrestrial Limiting \u21A7' = "Terrestrial Limiting",
+                    'Sea Level Indicator \u229e' = "Sea Level Indicator"
+                  ),
+                  selected = c("Marine Limiting", "Terrestrial Limiting", "Sea Level Indicator"),
+                  checkIcon = list(
+                    yes = icon("ok",
+                               lib = "glyphicon"),
+                    no = icon("remove",
+                              lib = "glyphicon")
+                  ),
+                  status = "primary",
+                  justified = TRUE
+                )
+              ),
+              column(4,
+                     disabled(
+                       checkboxGroupButtons(
+                         inputId = "elements_merge_cloudpoint",
+                         label = "Cloudpoint elements to display:",
+                         choices = c(
+                           `Cloudpoint <i class="far fa-dot-circle"></i>` = "cloudpoint",
+                           `Density <i class="fas fa-shapes"></i>` = "2ddensity"
+                         ),
+                         selected = c('cloudpoint'),
+                         checkIcon = list(
+                           yes = icon("ok",
+                                      lib = "glyphicon"),
+                           no = icon("remove",
+                                     lib = "glyphicon")
+                         ),
+                         status = "primary",
+                         justified = TRUE
+                       )
+                     )))
+            )
+          ))
+        )
       )
-      
-# Define server function
+    )
+  )
+
+
+################################################################################
+############################### SERVER FUNCTION   ##############################
+################################################################################
 
 server <- function(input, output) {
   area <-
     reactiveValues(coord = data.frame(lon = c(0, 0, 0, 0, 0),
                                       lat = c(0, 0, 0, 0, 0)))
+  
+  
+  #### FUNCTIONS #####
   
   marker_function <-
     function(marker_color, icon, icon_color, name) {
@@ -1028,7 +1287,7 @@ server <- function(input, output) {
     ))
   
   type_selected <- observe({
-    selected_groups <- input$mymap_groups
+    selected_groups <- input$inter_tab_map_groups
     selected_type <- lapply(selected_groups, from_html_to_type)
     selected_type <- selected_type[!is.na(selected_type)]
     type_sel$val <- selected_type
@@ -1039,10 +1298,10 @@ server <- function(input, output) {
   df <-
     st_as_sf(rsl_summary,
              coords = c("Longitude", "Latitude"),
-             crs = 4326)# %>% st_jitter(factor = 0.001)
+             crs = 4326)
   #Patch
   df[df$Timing.constraint == "Equal to ", "Timing.constraint"] = "Equal to"
-  df <- df[is.na(df$Elevation..m.) == FALSE,]
+  df <- df[is.na(df$Elevation..m.) == FALSE, ]
   
   groups = unique(df$Type.of.datapoint)
   df$Type.of.datapoint <- factor(df$Type.of.datapoint)
@@ -1159,14 +1418,22 @@ server <- function(input, output) {
         )
     )
     df_sub_final <-
-      df_sub[setdiff(rownames(df_sub), rownames(df_sub_sli)), ]
+      df_sub[setdiff(rownames(df_sub), rownames(df_sub_sli)),]
     
     print(paste("RSL (after filters)", nrow(df_sub_final)))
     
     return(df_sub_final)
   })
   
-  output$panel <- renderUI({
+  ########### Render UI ########
+  
+  ##############################
+  ### INTERACTIVE MAP TAB ######
+  ##############################
+  
+  # Information Panel 
+  
+  output$inter_tab_infopanel <- renderUI({
     fluidPage(fluidRow(
       column(
         12,
@@ -1244,7 +1511,316 @@ server <- function(input, output) {
     ))
   })
   
-  output$panel_2 <- renderUI({
+  # Interactive map
+  
+  output$inter_tab_map <- renderLeaflet({
+    leaflet() %>% addTiles(
+      options = providerTileOptions(
+        updateWhenZooming = FALSE,
+        updateWhenIdle = FALSE,
+        minZoom = 3,
+        maxZoom = 12
+      )
+    ) %>% setView(7.595791257753539, 51.96953395614229, zoom = 3) %>% setMaxBounds(
+      lng1 = -200,
+      lat1 = -90,
+      lng2 = 200,
+      lat2 = 90
+    ) %>%
+      addEasyButtonBar(
+        position = "topright",
+        easyButton(
+          icon = icon("globe-africa", "fa-2x"),
+          title = "Center in Africa",
+          onClick = JS(
+            "function(btn, map){map.setView(new L.LatLng(-1, 12),4);}"
+          )
+        ),
+        easyButton(
+          icon = icon("globe-asia", "fa-2x"),
+          title = "Center in Asia",
+          onClick = JS(
+            "function(btn, map){map.setView(new L.LatLng(19.7, 105.9),4);}"
+          )
+        ),
+        easyButton(
+          icon = icon("globe-europe", "fa-2x"),
+          title = "Center in Europe",
+          onClick = JS(
+            "function(btn, map){map.setView(new L.LatLng(46.6, 13.3),4);}"
+          )
+        ),
+        easyButton(
+          icon = icon("globe-americas", "fa-2x"),
+          title = "Center in The Americas",
+          onClick = JS(
+            "function(btn, map){map.setView(new L.LatLng(8.4, -79.5),4);}"
+          )
+        )
+      ) %>%
+      addLayersControl(
+        overlayGroups = unique(df$marker),
+        position = "topright",
+        options = layersControlOptions(collapsed = FALSE)
+      ) %>%
+      htmlwidgets::onRender(
+        "
+                         function() {
+              $('.leaflet-control-layers-overlays').prepend('<label style=\"text-align:center;color:red\"> \U25c8 Indicator type </label>');
+          }
+      "
+      )
+  })
+  
+  # Observe events - Interactive map
+  
+  observe({
+    if (nrow(data()) == 0) {
+      leafletProxy("inter_tab_map") %>%
+        clearMarkers() %>% clearMarkerClusters()
+    }
+    else {
+      rsl.df <- split(data(), data()$marker)
+      
+      l <- leafletProxy("inter_tab_map", data = data()) %>%
+        clearMarkers() %>% clearMarkerClusters()
+      
+      names(rsl.df)  %>%
+        purrr::walk(function(df) {
+          l <<- l %>% addAwesomeMarkers(
+            data = rsl.df[[df]],
+            label =  ~ WALIS_ID,
+            group = df,
+            popup = ~ paste0(
+              "<b>WALIS ID: </b>",
+              WALIS_ID,
+              "<br/><b>Type of point:</b> ",
+              Type.of.datapoint,
+              "<br/><b>Dating method:</b> ",
+              Dating.technique,
+              "<br/><b>Age ",
+              Timing.constraint,
+              " (50th percentile):</b> ",
+              Age..ka..50.perc,
+              " (ka)",
+              "<br/><b>Elevation error: </b> ",
+              Elevation.error..m.,
+              " (m)",
+              "<br/><b> Reference: </b>",
+              Reference.s.,
+              "<br/><b> RSL digitized by: </b>",
+              Record.Created.by
+            ),
+            icon = awesomeIcons(
+              library = "glyphicon",
+              icon = ~ icon,
+              iconColor = 'black',
+              markerColor = ~ marker_color
+            ),
+            clusterOptions = markerClusterOptions(disableClusteringAtZoom =
+                                                    8)
+          )
+        })
+      
+      l %>%
+        {
+          if (input$geo == "polygon")
+            addDrawToolbar(
+              .,
+              polylineOptions = FALSE,
+              circleOptions = FALSE,
+              markerOptions = FALSE,
+              circleMarkerOptions = FALSE,
+              position = "topleft",
+              editOptions = editToolbarOptions(selectedPathOptions = selectedPathOptions()),
+              singleFeature = TRUE
+            )
+          else
+            .
+        }
+    }
+  })
+  
+  # Drar new feature
+  
+  observeEvent(input$inter_tab_map_draw_new_feature, {
+    feature <- input$inter_tab_map_draw_new_feature
+    coor <- unlist(feature$geometry$coordinates)
+    lon <- coor[seq(1, length(coor), 2)]
+    lat <- coor[seq(2, length(coor), 2)]
+    if (input$geo == "polygon" & !is.null(coor)) {
+      df_area <- rbind(data.frame(longitude = lon, latitude = lat))
+      area$coord <- df_area
+    }
+    else{
+      area$coord <- area$coord
+    }
+  })
+  
+  hover <- reactive({
+    if (is.null(input$inter_tab_map_bounds))
+      list(inter_tab_map_bounds = c(
+        west = 0,
+        east = 0,
+        north = 0,
+        south = 0
+      ))
+    else
+      input$inter_tab_map_bounds
+  })
+  
+  hover <- hover %>% debounce(500)
+  
+  observeEvent(c(hover(), input$geo), ignoreInit = TRUE, {
+    if (input$geo == "map") {
+      feature <- unlist(hover())
+      lon <-
+        c(feature[["west"]], feature[["west"]], feature[["east"]], feature[["east"]], feature[["west"]])
+      lat <-
+        c(feature[["south"]], feature[["north"]], feature[["north"]], feature[["south"]], feature[["south"]])
+      df_area <- rbind(data.frame(longitude = lon, latitude = lat))
+      area$coord <- df_area
+    }
+  })
+  
+  # Data in area
+  
+  data_in_area <- reactiveValues(data = data.frame())
+  
+  # Update data in area
+  
+  in_area_data <-
+    observeEvent(c(data(),
+                   area$coord,
+                   type_sel$val),
+                 {
+                   data <- data()
+                   df_area <- area$coord
+                   matrix_area <- data.matrix(df_area)
+                   polygon <-
+                     st_polygon(list(matrix_area)) %>% st_sfc(crs = 4326)
+                   data$In_area <-
+                     st_intersects(data, polygon, sparse = FALSE)
+                   if (nrow(data) != 0) {
+                     sub_data <-
+                       subset(data, subset = Type.of.datapoint %in% type_sel$val &
+                                In_area == TRUE)
+                   }
+                   else{
+                     sub_data <- data
+                   }
+                   data_in_area$data <- sub_data
+                   print(paste0("RSL in area:", nrow(data_in_area$data)))
+                   return("Change")
+                 })
+
+  # Sea level Plot
+  
+  output$sealevelPlot <- renderGirafe({
+    girafe(
+      ggobj = plot_sea_level(data_in_area$data,
+                             type_sel$val),
+      options = list(opts_zoom(max = 5))
+    )
+  })
+  
+  # Download Data table
+  
+  output$downloadDataTable <- downloadHandler(
+    filename = function() {
+      paste("walis_summary.csv")
+    },
+    content = function(filename) {
+      metadata <-
+        data.frame(
+          metadata = c(
+            "# Publisher: WALIS - https://warmcoasts.eu/",
+            paste("#Age Range (ka):", input$temp),
+            "#Percetiles range:",
+            "#Dating tecniques:",
+            "#Elevation error:",
+            "#Percentiles range",
+            "#Uncertainty(m)",
+            "#RSL indicator type:",
+            "#Extent:"
+          )
+        )
+      
+      data <-
+        data_in_area$data %>% dplyr::mutate(
+          longitude = sf::st_coordinates(.)[, 1],
+          latitude = sf::st_coordinates(.)[, 2]
+        ) %>% st_drop_geometry()
+      drops <-
+        c(
+          "geometry",
+          "marker_color",
+          "In_area",
+          "icon",
+          "marker",
+          "Perc_Paleo_RSL_uncertainty"
+        )
+      data <- data[,!(names(data) %in% drops)]
+      con <- file(filename, 'wt')
+      cat(
+        paste0(
+          '#Publisher:WALIS-https://warmcoasts.eu/world-atlas.html',
+          '\n'
+        ),
+        file = con
+      )
+      cat(paste0('#FILTERS', '\n'), file = con)
+      cat(paste0('#Age range (ka): ', input$temp[1], "-", input$temp[2], '\n'),
+          file = con)
+      cat(
+        paste0(
+          '#Percentiles range [Age]: ',
+          perc_range_age$low_age,
+          "-",
+          perc_range_age$upp_age,
+          '\n'
+        ),
+        file = con
+      )
+      cat(paste0('#Dating techniques: ', paste(
+        unlist(input$dating_tech), collapse = '/'
+      ), '\n'), file = con)
+      cat(paste0('#Elevation error: ', paste(unlist(
+        input$elev_error
+      ), collapse = '/'), '\n'), file = con)
+      cat(
+        paste0(
+          '#Percentiles range  [Paleo RSL]: ',
+          perc_range_rsl$low_rsl,
+          "-",
+          perc_range_rsl$upp_rsl,
+          '\n'
+        ),
+        file = con
+      )
+      cat(paste0(
+        '#Uncertainty (m) [Paleo RSL]: ',
+        paste(unlist(input$elev_uncert), collapse = '-'),
+        '\n'
+      ), file = con)
+      cat(paste0('#RSL indicator type: ', paste(
+        unlist(input$type_indicators), collapse = '/'
+      ), '\n'), file = con)
+      cat(paste0('#Extent', '\n'), file = con)
+      write.table(data,
+                  file = con,
+                  row.names = FALSE,
+                  sep = ";")
+    }
+  )
+
+  ##############################
+  #### SUMMARY TABLE TAB #######
+  ##############################
+  
+  # Filters menu
+  
+  output$sum_tab_information <- renderUI({
     fluidPage(fluidRow(
       column(
         12,
@@ -1334,79 +1910,20 @@ server <- function(input, output) {
     ))
   })
   
-  output$panel_3 <- renderUI({
-    data_in_area_selection <- data_in_area$data %>% st_drop_geometry()
-    pickerInput(
-      inputId = "slip_selection",
-      label = "Sea level index points:",
-      choices = unique(data_in_area_selection[data_in_area_selection$Type.of.datapoint ==
-                                                'Sea Level Indicator', 'WALIS_ID']),
-      selected = unique(data_in_area_selection[data_in_area_selection$Type.of.datapoint ==
-                                                 'Sea Level Indicator', 'WALIS_ID']),
-      multiple = TRUE,
-      options = list(`actions-box` = TRUE,style = "btn-primary")
-    )
+  # Minimap
+  
+  output$minimap <- renderLeaflet({
+    df_area <- area$coord
+    matrix_area <- data.matrix(df_area)
+    polygon <- st_polygon(list(matrix_area)) %>% st_sfc(crs = 4326)
+    l <-
+      leaflet(polygon) %>% addTiles() %>% addPolygons(color = "green", popup =
+                                                        "Selected area")
   })
   
-  output$slip <- renderValueBox(
-    valueBox(value = nrow(unique(
-      data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint ==
-                                  'Sea Level Indicator', 'WALIS_ID']
-    )), subtitle = 'SLIPs (All)' , icon = icon('plus-square'),color='olive'))
+  # Table
   
-  
-  output$slip_equal <- renderValueBox(
-    valueBox(value = nrow(unique(
-                     data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint ==
-                                                 'Sea Level Indicator' &
-                                                 data_in_area_merging$data$Timing.constraint == 'Equal to', 'WALIS_ID']
-                   )), subtitle = 'SLIPs (Equal to)' , icon = icon('th-large')))
-  
-  output$marine_limiting <- renderValueBox(
-    valueBox(value = nrow(unique(
-      data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint ==
-                                  'Marine Limiting', 'WALIS_ID']
-    )), subtitle = 'Marine limiting' , icon = icon('long-arrow-alt-up'),color='blue'))
-  
-  output$terrestrial_limiting <- renderValueBox(
-    valueBox(value = nrow(unique(
-      data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint ==
-                                  'Terrestrial Limiting', 'WALIS_ID']
-    )), subtitle = 'Terr. limiting' , icon = icon('long-arrow-alt-down'),color='red'))
-  
-    
-  #   ,
-  #   fluidRow(column(
-  #     10,
-  #     dashboardLabel(
-  #       paste('\u229e', ' Equal to:',
-  #             nrow(unique(
-  #               data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint ==
-  #                                           'Sea Level Indicator' &
-  #                                           data_in_area_merging$data$Timing.constraint == 'Equal to', 'WALIS_ID']
-  #             ))),
-  #       status = "success",
-  #       style = "square"
-  #     )
-  #   )),
-  #   fluidRow(dashboardLabel(
-  #     paste(nrow(data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint ==
-  #                                            'Terrestrial Limiting',]), ' - Terrestrial Limiting'),
-  #     status = "danger",
-  #     style = "square"
-  #   )),
-  #   fluidRow(
-  #     dashboardLabel(
-  #       paste(nrow(data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint ==
-  #                                              'Marine Limiting',]), ' - Marine Limiting'),
-  #       color = "navy",
-  #       status = "primary",
-  #       style = "square"
-  #     )
-  #   )
-  # ))
-  
-  output$table <- DT::renderDataTable({
+  output$summary_tab_table <- DT::renderDataTable({
     data <-
       data_in_area$data %>% dplyr::mutate(
         longitude = sf::st_coordinates(.)[, 1],
@@ -1421,541 +1938,18 @@ server <- function(input, output) {
         "marker",
         "Perc_Paleo_RSL_uncertainty"
       )
-    data[, !(names(data) %in% drops)]
+    data[,!(names(data) %in% drops)]
   }, server = TRUE,
-  extensions = c('FixedHeader','FixedColumns'),
-  options = list(dom = 'lfrtip',
-                 pageLength = 25,scrollX = TRUE,fixedHeader = TRUE,
-                 fixedColumns = list(leftColumns = 2)))
+  extensions = c('FixedHeader', 'FixedColumns'),
+  options = list(
+    dom = 'lfrtip',
+    pageLength = 25,
+    scrollX = TRUE,
+    fixedHeader = TRUE,
+    fixedColumns = list(leftColumns = 2)
+  ))
   
-  output$mymap <- renderLeaflet({
-    leaflet() %>% addTiles(
-      options = providerTileOptions(
-        updateWhenZooming = FALSE,
-        updateWhenIdle = FALSE,
-        minZoom = 3,
-        maxZoom = 12
-      )
-    ) %>% setView(7.595791257753539, 51.96953395614229, zoom = 3) %>% setMaxBounds(
-      lng1 = -200,
-      lat1 = -90,
-      lng2 = 200,
-      lat2 = 90
-    ) %>%
-      addEasyButtonBar(
-        position = "topright",
-        easyButton(
-          icon = icon("globe-africa", "fa-2x"),
-          title = "Center in Africa",
-          onClick = JS(
-            "function(btn, map){map.setView(new L.LatLng(-1, 12),4);}"
-          )
-        ),
-        easyButton(
-          icon = icon("globe-asia", "fa-2x"),
-          title = "Center in Asia",
-          onClick = JS(
-            "function(btn, map){map.setView(new L.LatLng(19.7, 105.9),4);}"
-          )
-        ),
-        easyButton(
-          icon = icon("globe-europe", "fa-2x"),
-          title = "Center in Europe",
-          onClick = JS(
-            "function(btn, map){map.setView(new L.LatLng(46.6, 13.3),4);}"
-          )
-        ),
-        easyButton(
-          icon = icon("globe-americas", "fa-2x"),
-          title = "Center in The Americas",
-          onClick = JS(
-            "function(btn, map){map.setView(new L.LatLng(8.4, -79.5),4);}"
-          )
-        )
-      ) %>%
-      addLayersControl(
-        overlayGroups = unique(df$marker),
-        position = "topright",
-        options = layersControlOptions(collapsed = FALSE)
-      ) %>%
-      htmlwidgets::onRender(
-        "
-                         function() {
-              $('.leaflet-control-layers-overlays').prepend('<label style=\"text-align:center;color:red\"> \U25c8 Indicator type </label>');
-          }
-      "
-      )
-  })
-  
-  output$minimap <- renderLeaflet({
-    df_area <- area$coord
-    matrix_area <- data.matrix(df_area)
-    polygon <- st_polygon(list(matrix_area)) %>% st_sfc(crs = 4326)
-    l <-
-      leaflet(polygon) %>% addTiles() %>% addPolygons(color = "green", popup =
-                                                        "Selected area")
-  })
-  
-  output$minimap_2 <- renderLeaflet({
-    df_area <- area$coord
-    matrix_area <- data.matrix(df_area)
-    polygon <- st_polygon(list(matrix_area)) %>% st_sfc(crs = 4326)
-    # Remove Leaflet attribution to improve the visualization of miniature
-    # Other maps display the attribution
-    # Leaflet | © OpenStreetMap contributors, CC-BY-SA
-    
-    l <-
-      leaflet(polygon,
-              options = leafletOptions(zoomControl = FALSE, attributionControl=FALSE)) %>% addTiles() %>% addPolygons(color = "green", popup =
-                                                                                                                          "Selected area")
-  })
-  
-  observe({
-    if (nrow(data()) == 0) {
-      leafletProxy("mymap") %>%
-        clearMarkers() %>% clearMarkerClusters()
-    }
-    else {
-      rsl.df <- split(data(), data()$marker)
-      
-      l <- leafletProxy("mymap", data = data()) %>%
-        clearMarkers() %>% clearMarkerClusters()
-      
-      names(rsl.df)  %>%
-        purrr::walk(function(df) {
-          l <<- l %>% addAwesomeMarkers(
-            data = rsl.df[[df]],
-            label =  ~ WALIS_ID,
-            group = df,
-            popup = ~ paste0(
-              "<b>WALIS ID: </b>",
-              WALIS_ID,
-              "<br/><b>Type of point:</b> ",
-              Type.of.datapoint,
-              "<br/><b>Dating method:</b> ",
-              Dating.technique,
-              "<br/><b>Age ",
-              Timing.constraint,
-              " (50th percentile):</b> ",
-              Age..ka..50.perc,
-              " (ka)",
-              "<br/><b>Elevation error: </b> ",
-              Elevation.error..m.,
-              " (m)",
-              "<br/><b> Reference: </b>",
-              Reference.s.,
-              "<br/><b> RSL digitized by: </b>",
-              Record.Created.by
-            ),
-            icon = awesomeIcons(
-              library = "glyphicon",
-              icon = ~ icon,
-              iconColor = 'black',
-              markerColor = ~ marker_color
-            ),
-            clusterOptions = markerClusterOptions(disableClusteringAtZoom =
-                                                    8)
-          )
-        })
-      
-      l %>%
-        {
-          if (input$geo == "polygon")
-            addDrawToolbar(
-              .,
-              polylineOptions = FALSE,
-              circleOptions = FALSE,
-              markerOptions = FALSE,
-              circleMarkerOptions = FALSE,
-              position = "topleft",
-              editOptions = editToolbarOptions(selectedPathOptions = selectedPathOptions()),
-              singleFeature = TRUE
-            )
-          else
-            .
-        }
-    }
-  })
-  
-  observeEvent(input$mymap_draw_new_feature, {
-    feature <- input$mymap_draw_new_feature
-    coor <- unlist(feature$geometry$coordinates)
-    lon <- coor[seq(1, length(coor), 2)]
-    lat <- coor[seq(2, length(coor), 2)]
-    if (input$geo == "polygon" & !is.null(coor)) {
-      df_area <- rbind(data.frame(longitude = lon, latitude = lat))
-      area$coord <- df_area
-    }
-    else{
-      area$coord <- area$coord
-    }
-  })
-  
-  hover <- reactive({
-    if (is.null(input$mymap_bounds))
-      list(mymap_bounds = c(
-        west = 0,
-        east = 0,
-        north = 0,
-        south = 0
-      ))
-    else
-      input$mymap_bounds
-  })
-  hover <- hover %>% debounce(500)
-  
-  observeEvent(c(hover(), input$geo), ignoreInit = TRUE, {
-    if (input$geo == "map") {
-      feature <- unlist(hover())
-      lon <-
-        c(feature[["west"]], feature[["west"]], feature[["east"]], feature[["east"]], feature[["west"]])
-      lat <-
-        c(feature[["south"]], feature[["north"]], feature[["north"]], feature[["south"]], feature[["south"]])
-      df_area <- rbind(data.frame(longitude = lon, latitude = lat))
-      area$coord <- df_area
-    }
-  })
-  
-  # Keep track of type of sampling 
-  
-  sampling_peaks <- reactiveValues(data=c())
-  
-  observeEvent(c(input$sampling_strategy),{
-    
-    if(input$sampling_strategy == 'Regular sampling'){
-      sampling_peaks$data <- c()
-    }
-    else{
-      sampling_peaks$data <- peak_ranges_spratt
-    }
-  })
-  
-  data_in_area <- reactiveValues(data = data.frame())
-  
-  in_area_data <-
-    observeEvent(c(data(),
-                   area$coord,
-                   type_sel$val),
-                 {
-                   data <- data()
-                   df_area <- area$coord
-                   matrix_area <- data.matrix(df_area)
-                   polygon <-
-                     st_polygon(list(matrix_area)) %>% st_sfc(crs = 4326)
-                   data$In_area <-
-                     st_intersects(data, polygon, sparse = FALSE)
-                   if (nrow(data) != 0) {
-                     sub_data <-
-                       subset(data, subset = Type.of.datapoint %in% type_sel$val &
-                                In_area == TRUE)
-                   }
-                   else{
-                     sub_data <- data
-                   }
-                   data_in_area$data <- sub_data
-                   print(paste0("RSL in area:", nrow(data_in_area$data)))
-                   return("Change")
-                 })
-  
-  
-  data_in_area_merging <- reactiveValues(data = data.frame())
-  
-  slip_sel <-
-    reactiveValues(val = c())
-  
-  slip_selected <- observe({
-    selected_slip <- input$slip_selection
-    slip_sel$val <- selected_slip
-    return(selected_slip)
-  })
-  
-  in_area_merging <- observeEvent(c(data_in_area,
-                                    slip_sel$val),
-                                  {
-                                    ids_limiting <-
-                                      data_in_area$data[data_in_area$data$Type.of.datapoint != 'Sea Level Indicator', 'WALIS_ID'] %>%
-                                      st_drop_geometry()
-                                    ids_slip <- slip_sel$val
-                                    ids_selection <-
-                                      c(unique(ids_limiting$WALIS_ID), ids_slip)
-                                    data_in_area_merging$data <-
-                                      data_in_area$data[data_in_area$data$WALIS_ID %in% ids_selection,]
-                                    disable('elements_merge_cloudpoint')
-                                    return("Change")
-                                  })
-  
-  # Merging point cloud
-  
-  merging_point_cloud <- reactiveValues(data = data.frame())
-  
-  confirmation_merge <- observeEvent(input$mergeButton, {
-    
-    num_indicators <- nrow(unique(data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint ==
-                                            'Sea Level Indicator' &
-                                            data_in_area_merging$data$Timing.constraint == 'Equal to', 'WALIS_ID']))
-    print(num_indicators)
-    
-    if (input$mergeButton!= 0 & num_indicators == 0){
-      
-      sendSweetAlert(title = 'Error: Merging sea level index',
-                     text = ' Your selection does not include sea level index points with timing constraint "Equal to". ',
-                     type = 'error')
-    }
-    
-    if (input$mergeButton != 0 & num_indicators > 0) {
-      confirmSweetAlert(
-        inputId = 'confirmMerge',
-        title = "Merging sea level index points",
-        text = paste0(
-          'Only sea level index points with temporal constraint "Equal to" are included \U2705.',
-          ' The merging process \U1F504 is going to include ',
-          nrow(unique(data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint ==
-                                    'Sea Level Indicator' &
-                                    data_in_area_merging$data$Timing.constraint == 'Equal to', 'WALIS_ID'])),
-        ' sea level index points (out of ',
-        nrow(unique(data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint ==
-                                                'Sea Level Indicator', 'WALIS_ID'])),
-        ' from your selection). ',
-        ' This process could take several minutes \u23F3 depending on the number of selected points per sea level indicator. ',
-        ' \U1F914 Are you sure you want to continue ? '
-        ),
-        size = 'xss',
-        type = "question",
-        btn_labels = c('Cancel', 'Confirm')
-      )
-    }
-    return()
-  })
-  
-  output$confirmMerge <- renderPrint(input$confirmMerge)
-  
-  merge_point_cloud <- observeEvent(input$confirmMerge, {
-    
-    if (input$confirmMerge == TRUE) {
-      
-      # 1. Select data in area and input
-      
-      area_sli <- isolate(data_in_area_merging$data)
-      n_sampling <- input$points_per_slip
-      sl_peaks <- sampling_peaks$data
-      
-      area_sli <-  area_sli[area_sli$Type.of.datapoint =='Sea Level Indicator' & 
-                              area_sli$Timing.constraint == 'Equal to', ]
-
-      ## 2. Sample Sea level indicators
-      
-      if (nrow(area_sli) > 0) {
-        # Age
-        progressSweetAlert(
-          id = "progress_age",
-          title = "Merging age values \n from sea level index points (1/2)",
-          display_pct = TRUE,
-          size = 'sm',
-          status = 'info',
-          striped = TRUE,
-          value = 0
-        )
-        
-        #Initialize progress bar for age
-        prog <- 0
-        
-        #Sleep time to read updateProgressBar message
-        
-        Sys.sleep(2)
-        age <- pblapply(unique(area_sli$WALIS_ID), function(x) {
-          prog <<- prog + 1
-          updateProgressBar(
-            id = "progress_age",
-            value = prog / length(unique(area_sli$WALIS_ID)) * 100
-          )
-          extract_age(area_sli[area_sli$WALIS_ID == x, ], n_samples = n_sampling, peaks = sl_peaks)
-        })
-        closeSweetAlert()
-        
-        # RSL
-        
-        # Create progress bar
-        progressSweetAlert(
-          id = "progress_rsl",
-          title = "Merging relative sea level values \n from sea level index points (2/2)",
-          display_pct = TRUE,
-          status = 'info',
-          size ='xxs',
-          striped = TRUE,
-          value = 0
-        )
-        
-        #Initialize progress bar for rsl
-        prog_2 <- 0
-        #Sleep time to read updateProgressBar message
-        Sys.sleep(2)     
-        
-        # Update progress bar with the rsl extraction process     
-        rsl <- pblapply(unique(area_sli$WALIS_ID), function(x) {
-          prog_2 <<- prog_2 + 1
-          updateProgressBar(id = "progress_rsl",
-                            value = prog_2 / length(unique(area_sli$WALIS_ID)) * 100)
-          extract_rsl(area_sli[area_sli$WALIS_ID == x, ], n_samples = n_sampling)
-        })
-        
-        closeSweetAlert()
-        
-        # Join Age and RSL
-        age_rsl_area <-
-          lapply(1:length(age), function(x)
-            join_age_rsl(age[[x]], rsl[[x]]))
-        
-        # 3. Extract features
-        # Extract Sea level indicators
-        
-        sli_sample <- lapply(age_rsl_area, '[[', 'sli_sample')
-        sli_sample <-
-          sli_sample[!sapply(sli_sample, function(x)
-            is.null(x))]
-        sli_area <- bind_rows(sli_sample)
-        
-      }
-      else{
-        sli_area = data.frame()
-      }
-      merging_point_cloud$data <- sli_area
-      enable('elements_merge_cloudpoint')
-      return('Change')
-    }
-  })
-  
-  observeEvent(c(input$slip_selection), {
-    merging_point_cloud$data <- data.frame()
-  })
-  
-  output$sealevelPlot <- renderGirafe({
-    girafe(
-      ggobj = plot_sea_level(data_in_area$data,
-                             type_sel$val),
-      options = list(opts_zoom(max = 5))
-    )
-  })
-  
-  # MERGE TAB
-  ## Functions to plot relative sea level information
-  
-  ### Reactive element to store elements to plot (e.g Limiting data & Sea level indicators)
-  elements_plot_merge <- reactiveValues(elements = c())
-  
-  # Observe User input from 4 Buttons (Terrestrial lim. - Marine lim. - Cloudpoint - Density)
-  observeEvent(c(
-    input$elements_merge_indicators,
-    input$elements_merge_cloudpoint
-  ),
-  {
-    selection_elements <-
-      c(input$elements_merge_indicators,
-        input$elements_merge_cloudpoint)
-    print(length(input$elements_merge_indicators))
-    print(length(input$elements_merge_cloudpoint))
-    elements_plot_merge$elements <- selection_elements
-  })
-  
-  # Function to plot sea level information ('Merge')
-  output$mergePlot <- renderGirafe({
-    girafe(
-      ggobj = plot_sea_level(
-        data_in_area_merging$data,
-        elements_plot_merge$elements,
-        merging_point_cloud$data
-      ),
-      options = list(opts_zoom(max = 5))
-    )
-  })
-  
-  
-  output$downloadDataTable <- downloadHandler(
-    filename = function() {
-      paste("walis_summary.csv")
-    },
-    content = function(filename) {
-      metadata <-
-        data.frame(
-          metadata = c(
-            "# Publisher: WALIS - https://warmcoasts.eu/",
-            paste("#Age Range (ka):", input$temp),
-            "#Percetiles range:",
-            "#Dating tecniques:",
-            "#Elevation error:",
-            "#Percentiles range",
-            "#Uncertainty(m)",
-            "#RSL indicator type:",
-            "#Extent:"
-          )
-        )
-      
-      data <-
-        data_in_area$data %>% dplyr::mutate(
-          longitude = sf::st_coordinates(.)[, 1],
-          latitude = sf::st_coordinates(.)[, 2]
-        ) %>% st_drop_geometry()
-      drops <-
-        c(
-          "geometry",
-          "marker_color",
-          "In_area",
-          "icon",
-          "marker",
-          "Perc_Paleo_RSL_uncertainty"
-        )
-      data <- data[, !(names(data) %in% drops)]
-      con <- file(filename, 'wt')
-      cat(
-        paste0(
-          '#Publisher:WALIS-https://warmcoasts.eu/world-atlas.html',
-          '\n'
-        ),
-        file = con
-      )
-      cat(paste0('#FILTERS', '\n'), file = con)
-      cat(paste0('#Age range (ka): ', input$temp[1], "-", input$temp[2], '\n'),
-          file = con)
-      cat(
-        paste0(
-          '#Percentiles range [Age]: ',
-          perc_range_age$low_age,
-          "-",
-          perc_range_age$upp_age,
-          '\n'
-        ),
-        file = con
-      )
-      cat(paste0('#Dating techniques: ', paste(
-        unlist(input$dating_tech), collapse = '/'
-      ), '\n'), file = con)
-      cat(paste0('#Elevation error: ', paste(unlist(
-        input$elev_error
-      ), collapse = '/'), '\n'), file = con)
-      cat(
-        paste0(
-          '#Percentiles range  [Paleo RSL]: ',
-          perc_range_rsl$low_rsl,
-          "-",
-          perc_range_rsl$upp_rsl,
-          '\n'
-        ),
-        file = con
-      )
-      cat(paste0(
-        '#Uncertainty (m) [Paleo RSL]: ',
-        paste(unlist(input$elev_uncert), collapse = '-'),
-        '\n'
-      ), file = con)
-      cat(paste0('#RSL indicator type: ', paste(
-        unlist(input$type_indicators), collapse = '/'
-      ), '\n'), file = con)
-      cat(paste0('#Extent', '\n'), file = con)
-      write.table(data,
-                  file = con,
-                  row.names = FALSE,
-                  sep = ",")
-    }
-  )
+  # Download table
   
   output$downloadDataTable_2 <- downloadHandler(
     filename = function() {
@@ -1991,7 +1985,7 @@ server <- function(input, output) {
           "marker",
           "Perc_Paleo_RSL_uncertainty"
         )
-      data <- data[, !(names(data) %in% drops)]
+      data <- data[,!(names(data) %in% drops)]
       con <- file(filename, 'wt')
       cat(
         paste0(
@@ -2041,25 +2035,747 @@ server <- function(input, output) {
       write.table(data,
                   file = con,
                   row.names = FALSE,
-                  sep = ",")
+                  sep = ";")
     }
   )
+  
+  ##############################
+  ####### MERGE SLIP TAB ######
+  ##############################
+  
+  # SLIP Filter
+  
+  output$merge_tab_slip_filter <- renderUI({
+    data_in_area_selection <- data_in_area$data %>% st_drop_geometry()
+    pickerInput(
+      inputId = "slip_selection",
+      label = "SLIPs filter",
+      choices = unique(data_in_area_selection[data_in_area_selection$Type.of.datapoint ==
+                                                'Sea Level Indicator', 'WALIS_ID']),
+      selected = unique(data_in_area_selection[data_in_area_selection$Type.of.datapoint ==
+                                                 'Sea Level Indicator', 'WALIS_ID']),
+      multiple = TRUE,
+      options = list(`actions-box` = TRUE, style = "btn-primary")
+    )
+  })
+  
+  # Points per SLIP
+  
+  output$merge_tab_poinsperslip <- renderUI({
+    num_slips <- nrow(unique(data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint ==
+                                                         'Sea Level Indicator' &
+                                                         data_in_area_merging$data$Timing.constraint == 'Equal to', 'WALIS_ID']))
+    
+    max_points <- 10000
+    
+    if (num_slips > 30) {
+      max_points <- round(300000 / num_slips, -2)
+    }
+    
+    sliderInput(
+      "points_per_slip",
+      "⚈ Points per SLIP",
+      min = 100,
+      max = max_points,
+      step = 100,
+      value = round((max_points + 100) / 2, -2)
+    )
+  })
+  
+  # Sampling strategy
+  
+  output$merge_tab_samplingstrategy <- renderUI({
+    num <- data_in_area_merging$num
+    
+    if (num == 0) {
+      pickerInput(
+        inputId = "samplingStrategy",
+        label = "📐 Sampling strategy",
+        choices = c("Regular sampling"),
+        selected = 'Regular sampling',
+        options = list(style = "btn-primary")
+      )
+      
+    }
+    else{
+      pickerInput(
+        inputId = "samplingStrategy",
+        label = "📐 Sampling strategy",
+        choices = c("Peak sampling", "Regular sampling"),
+        selected = 'Regular sampling',
+        options = list(style = "btn-primary")
+      )
+      
+    }
+  })
+  
+  # Information Panel
+  
+  output$merge_tab_info_panel <- renderUI({
+    fluidPage(fluidRow(
+      column(
+        12,
+        dashboardLabel(icon("stopwatch"),
+                       status = "info",
+                       style = "square"),
+        dashboardLabel(
+          paste("Age range: ", input$temp[1], "-", input$temp[2], " (ka)"),
+          status = "info",
+          style = "square"
+        ),
+        dashboardLabel(
+          paste("Percent. range:", perc_up[input$perc_age], "-", perc_low[input$perc_age]),
+          status = "info",
+          style = "square"
+        ),
+        dashboardLabel(
+          paste(
+            "Dating Techniques:",
+            paste(input$dating_tech, collapse = "-")
+          ),
+          status = "info",
+          style = "square"
+        )
+      )
+    ),
+    fluidRow(
+      column(
+        12,
+        dashboardLabel(
+          icon("filter", "glyphicon"),
+          status = "warning",
+          style = "square"
+        ),
+        dashboardLabel(
+          paste(
+            "Elevation error: ",
+            input$elev_error[1],
+            "-",
+            input$elev_error[2],
+            "(m)"
+          ),
+          status = "warning",
+          style = "square"
+        ),
+        dashboardLabel(
+          paste("Percent. range:", perc_up[input$perc_age], "-", perc_low[input$perc_age]),
+          status = "warning",
+          style = "square"
+        )
+        ,
+        dashboardLabel(
+          paste(
+            "Uncertainty:",
+            input$elev_uncert[1],
+            "-",
+            input$elev_uncert[2],
+            " (m)"
+          ),
+          status = "warning",
+          style = "square"
+        )
+        ,
+        dashboardLabel(
+          paste(
+            "RSL Indicator types (",
+            length(input$type_indicators),
+            "/",
+            length(rsl_indicator),
+            ")"
+          )
+          ,
+          status = "warning",
+          style = "square"
+        )
+      )
+    ))
+  })
+  
+  
+  # Data in area (for merging)
+  
+  data_in_area_merging <- reactiveValues(data = data.frame(), num = -1)
+  
+  # Observe sea level index points in area
+  
+  slip_sel <-
+    reactiveValues(val = c())
+  
+  # Update SLIP Selected
+  
+  slip_selected <- observe({
+    selected_slip <- input$slip_selection
+    slip_sel$val <- selected_slip
+    return(selected_slip)
+  })
+  
+  # Update SLIP in area for mergning
+  
+  in_area_merging <- observeEvent(c(data_in_area,
+                                    slip_sel$val),
+                                  {
+                                    ids_limiting <-
+                                      data_in_area$data[data_in_area$data$Type.of.datapoint != 'Sea Level Indicator', 'WALIS_ID'] %>%
+                                      st_drop_geometry()
+                                    ids_slip <- slip_sel$val
+                                    ids_selection <-
+                                      c(unique(ids_limiting$WALIS_ID), ids_slip)
+                                    data_in_area_merging$data <-
+                                      data_in_area$data[data_in_area$data$WALIS_ID %in% ids_selection, ]
+                                    
+                                    
+                                    data_in_area_merging$num <-
+                                      nrow(unique(data_in_area$data[data_in_area$data$WALIS_ID %in% ids_selection &
+                                                                      data_in_area$data$Age.calculation.from != 'Radiometric dating', 'WALIS_ID'] %>%
+                                                    st_drop_geometry()))
+                                    print(data_in_area_merging$num)
+                                    disable('elements_merge_cloudpoint')
+                                    return("Change")
+                                  })
+  
+  # Keep track of type of sampling
+  
+  sampling_peaks <- reactiveValues(data = c())
+  
+  observeEvent(c(input$samplingStrategy), {
+    if (input$samplingStrategy == 'Regular sampling') {
+      sampling_peaks$data <- c()
+    }
+    else{
+      sampling_peaks$data <- peak_ranges_spratt
+    }
+  })
+  
+  # Download menu
+  
+  output$merge_tab_download <- renderUI({
+    num <- merging_point_cloud$data
+    print(merging_point_cloud$data)
+    
+    if (nrow(num) < 1) {
+      p()
+    }
+    else{
+      fluidPage(
+        p(strong('Download menu'), style = "font-size:22px;"),
+        p(
+          'You can directly download the cloudpoint in a file',
+          strong(icon("file-download")),
+          '
+        or a docker container ',
+          strong(icon("docker")),
+          '. The docker container allows you to reproduce the result in your computer.'
+        ),
+        fluidRow(column(
+          6,
+          downloadButton(
+            outputId = "download_cloudpoint",
+            icon = icon("file-download"),
+            label = "Cloudpoint",
+            style = "color: #fff; background-color: #2c3e50;border-color: #FFFFFF",
+            color = "primary"
+          )
+        ),
+        column(
+          6,
+          downloadButton(
+            outputId = "download_docker",
+            label = "Docker container",
+            style = "material-flat",
+            style = "color: #fff; background-color: #2c3e50;border-color: #FFFFFF",
+            color = "primary",
+            icon = icon("docker")
+          )
+        ))
+      )
+    }
+  })
+  
+  # Mini map
+  
+  output$minimap_2 <- renderLeaflet({
+    df_area <- area$coord
+    matrix_area <- data.matrix(df_area)
+    polygon <- st_polygon(list(matrix_area)) %>% st_sfc(crs = 4326)
+    # Remove Leaflet attribution to improve the visualization of the miniature
+    # Other maps display the attribution
+    # Leaflet | © OpenStreetMap contributors, CC-BY-SA
+    
+    l <-
+      leaflet(polygon,
+              options = leafletOptions(zoomControl = FALSE, attributionControl =
+                                         FALSE)) %>% addTiles() %>% addPolygons(color = "green", popup =
+                                                                                  "Selected area")
+  })
+  
+  #style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"
+  
+  # Value Box
+  
+  output$slip <- renderValueBox(valueBox(
+    value = nrow(unique(data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint ==
+                                                    'Sea Level Indicator', 'WALIS_ID'])),
+    subtitle = 'SLIPs (All)' ,
+    icon = icon('plus-square'),
+    color = 'olive'
+  ))
+  
+  output$slip_equal <- renderValueBox(valueBox(
+    value = nrow(unique(data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint ==
+                                                    'Sea Level Indicator' &
+                                                    data_in_area_merging$data$Timing.constraint == 'Equal to', 'WALIS_ID'])),
+    subtitle = 'SLIPs (Equal to)' ,
+    icon = icon('th-large')
+  ))
+  
+  output$marine_limiting <- renderValueBox(valueBox(
+    value = nrow(unique(data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint ==
+                                                    'Marine Limiting', 'WALIS_ID'])),
+    subtitle = 'Marine limiting' ,
+    icon = icon('long-arrow-alt-up'),
+    color = 'blue'
+  ))
+  
+  output$terrestrial_limiting <- renderValueBox(valueBox(
+    value = nrow(unique(data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint ==
+                                                    'Terrestrial Limiting', 'WALIS_ID'])),
+    subtitle = 'Terr. limiting' ,
+    icon = icon('long-arrow-alt-down'),
+    color = 'red'
+  ))
+  
+  output$cloudpoint <- renderValueBox({
+    color <- 'orange'
+    icon_value <- 'times-circle'
+    message <- icon(icon_value)
+    subtitle <- 'No cloudpoint'
+    
+    if (nrow(merging_point_cloud$data) > 0) {
+      icon_value <- 'check-circle'
+      message <- icon(icon_value)
+      color <- 'olive'
+      subtitle <- 'Cloudpoint available'
+    }
+    
+    valueBox(value = message,
+             subtitle = subtitle,
+             color = color)
+  })
+  
+  # Merging point cloud
+  
+  merging_point_cloud <- reactiveValues(data = data.frame())
+  
+  confirmation_merge <- observeEvent(input$mergeButton, {
+    num_indicators <-
+      nrow(unique(data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint ==
+                                              'Sea Level Indicator' &
+                                              data_in_area_merging$data$Timing.constraint == 'Equal to', 'WALIS_ID']))
+    print(num_indicators)
+    
+    if (input$mergeButton != 0 & num_indicators == 0) {
+      sendSweetAlert(title = 'Error: Merging sea level index',
+                     text = ' Your selection does not include sea level index points with timing constraint "Equal to". ',
+                     type = 'error')
+    }
+    
+    if (input$mergeButton != 0 & num_indicators > 0) {
+      confirmSweetAlert(
+        inputId = 'confirmMerge',
+        title = "Merging sea level index points",
+        text = paste0(
+          ' The merging process \U1F504 is going to include ',
+          nrow(unique(data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint ==
+                                                  'Sea Level Indicator' &
+                                                  data_in_area_merging$data$Timing.constraint == 'Equal to', 'WALIS_ID'])),
+          ' sea level index points with temporal constraint "Equal to" (out of ',
+          nrow(unique(data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint ==
+                                                  'Sea Level Indicator', 'WALIS_ID'])),
+          ' SLIP from your selection). ',
+          ' \U1F914 Are you sure you want to continue ? '
+        ),
+        size = 'xss',
+        type = "question",
+        btn_labels = c('Cancel', 'Confirm')
+      )
+    }
+    return()
+  })
+  
+  # Confirm merge
+  
+  output$confirmMerge <- renderPrint(input$confirmMerge)
+  
+  # Merning point cloud
+  
+  merge_point_cloud <- observeEvent(input$confirmMerge, {
+    if (input$confirmMerge == TRUE) {
+      # 1. Select data in area and input
+      
+      area_sli <- isolate(data_in_area_merging$data)
+      n_sampling <- input$points_per_slip
+      sl_peaks <- sampling_peaks$data
+      
+      area_sli <-
+        area_sli[area_sli$Type.of.datapoint == 'Sea Level Indicator' &
+                   area_sli$Timing.constraint == 'Equal to',]
+      
+      ## 2. Sample Sea level indicators
+      
+      if (nrow(area_sli) > 0) {
+        # Age
+        progressSweetAlert(
+          id = "progress_age",
+          title = "Merging age values \n from sea level index points (1/2)",
+          display_pct = TRUE,
+          size = 'sm',
+          status = 'info',
+          striped = TRUE,
+          value = 0
+        )
+        
+        #Initialize progress bar for age
+        prog <- 0
+        
+        #Sleep time to read updateProgressBar message
+        
+        Sys.sleep(2)
+        
+        set.seed(200)
+        
+        age <- pblapply(unique(area_sli$WALIS_ID), function(x) {
+          prog <<- prog + 1
+          updateProgressBar(id = "progress_age",
+                            value = prog / length(unique(area_sli$WALIS_ID)) * 100)
+          extract_age(area_sli[area_sli$WALIS_ID == x,], n_samples = n_sampling, peaks = sl_peaks)
+        })
+        closeSweetAlert()
+        
+        # RSL
+        
+        # Create progress bar
+        progressSweetAlert(
+          id = "progress_rsl",
+          title = "Merging relative sea level values \n from sea level index points (2/2)",
+          display_pct = TRUE,
+          status = 'info',
+          size = 'xxs',
+          striped = TRUE,
+          value = 0
+        )
+        
+        #Initialize progress bar for rsl
+        prog_2 <- 0
+        #Sleep time to read updateProgressBar message
+        Sys.sleep(2)
+        
+        # Update progress bar with the rsl extraction process
+        set.seed(100)
+        rsl <- pblapply(unique(area_sli$WALIS_ID), function(x) {
+          prog_2 <<- prog_2 + 1
+          updateProgressBar(id = "progress_rsl",
+                            value = prog_2 / length(unique(area_sli$WALIS_ID)) * 100)
+          extract_rsl(area_sli[area_sli$WALIS_ID == x,], n_samples = n_sampling)
+        })
+        
+        closeSweetAlert()
+        
+        # Join Age and RSL
+        age_rsl_area <-
+          lapply(1:length(age), function(x)
+            join_age_rsl(age[[x]], rsl[[x]]))
+        
+        # 3. Extract features
+        # Extract Sea level indicators
+        
+        sli_sample <- lapply(age_rsl_area, '[[', 'sli_sample')
+        sli_sample <-
+          sli_sample[!sapply(sli_sample, function(x)
+            is.null(x))]
+        sli_area <- bind_rows(sli_sample)
+        
+      }
+      else{
+        sli_area = data.frame()
+      }
+      merging_point_cloud$data <- sli_area
+      enable('elements_merge_cloudpoint')
+      return('Change')
+    }
+  })
+  
+  observeEvent(c(input$slip_selection), {
+    merging_point_cloud$data <- data.frame()
+  })
+  
+  ## Functions to plot relative sea level information
+  
+  ### Reactive element to store elements to plot (e.g Limiting data & Sea level indicators)
+  elements_plot_merge <- reactiveValues(elements = c())
+  
+  # Observe User input from 4 Buttons (Terrestrial lim. - Marine lim. - Cloudpoint - Density)
+  observeEvent(c(
+    input$elements_merge_indicators,
+    input$elements_merge_cloudpoint
+  ),
+  {
+    selection_elements <-
+      c(input$elements_merge_indicators,
+        input$elements_merge_cloudpoint)
+    print(length(input$elements_merge_indicators))
+    print(length(input$elements_merge_cloudpoint))
+    elements_plot_merge$elements <- selection_elements
+  })
+  
+  # Function to plot sea level information ('Merge')
+  output$mergePlot <- renderGirafe({
+    girafe(
+      ggobj = plot_sea_level(
+        data_in_area_merging$data,
+        elements_plot_merge$elements,
+        merging_point_cloud$data
+      ),
+      options = list(opts_zoom(max = 5))
+    )
+  })
+  
+  # Download cloudpoint
+  
+  output$download_cloudpoint <- downloadHandler(
+    filename = "WALIS_cloudpoint.zip",
+    content = function(fname) {
+      # Random code for download option
+      
+      random_id <-
+        paste0(paste0(sample(c(0:9), 3), collapse = ''),
+               paste0(sample(LETTERS, 3), collapse = ''))
+      
+      # Name for files
+      
+      name <- paste0("WALIS_",
+                     Sys.Date(),
+                     "_",
+                     nrow(unique(data_in_area_merging$data[data_in_area_merging$data$Type.of.datapoint ==
+                                                             'Sea Level Indicator' &
+                                                             data_in_area_merging$data$Timing.constraint == 'Equal to', 'WALIS_ID'])),
+                     "_SLIPs_ID_",
+                     random_id)
+      
+      # Creating list of files to include in zip folder
+      
+      fs <- c()
+      setwd(tempdir())
+      
+      # Writing csv file with cloud point
+      
+      write.table(
+        merging_point_cloud$data,
+        file = paste0(name, '.csv'),
+        sep = ',',
+        row.names = FALSE,
+        col.names = c('WALIS_ID', 'RSL(m)', 'Age(ka)'),
+      )
+      
+      # Writing geojson with cloudpoint processing metadata
+      
+      #TRABAJO
+      # Extracting parameters:
+      
+      ## Area
+      
+      df_area <- area$coord
+      matrix_area <- data.matrix(df_area)
+      geom <- st_polygon(list(matrix_area)) %>% st_sfc(crs = 4326)
+      
+      ## Age parameters
+      
+      # Age range
+      age_upp <- input$temp[1]
+      age_low <- input$temp[2]
+      
+      # Percentile range
+      upp_age <- perc_range_age$upp_age
+      low_age <- perc_range_age$low_age
+      
+      # Dating techniques
+      dating_tech <- paste(input$dating_tech, collapse = '/')
+      
+      ## RSL indicator
+      
+      # Elevation error
+      low_error <- input$elev_error[1]
+      upp_error <- input$elev_error[2]
+      
+      # Percentile RSL
+      
+      upp_rsl <- perc_range_rsl$upp_rsl
+      low_rsl <- perc_range_rsl$low_rsl
+      
+      # Paleo RSL Uncertainty
+      
+      rsl_unc_low <- input$elev_uncert[1]
+      rsl_unc_upp <- input$elev_uncert[2]
+      
+      # RSL filter by type
+      
+      rsl_filter <- paste(input$type_indicators, collapse = '/')
+      
+      ## Merging
+      
+      selected_slip <- paste(input$slip_selection, collapse = '/')
+      points_per_slip <- input$points_per_slip
+      sampling_strategy <- input$samplingStrategy
+      
+      #Create dataframe
+      
+      df1 <- data.frame(
+        processing_id = random_id,
+        date = Sys.Date(),
+        age_range_low = age_low,
+        age_range_upp = age_upp,
+        age_percentile_low = low_age,
+        age_percentile_upp = upp_age,
+        dating_techniques = dating_tech,
+        rsl_elevation_error_low = low_error,
+        rsl_elevation_error_upp = upp_error,
+        rsl_percentile_low = low_rsl,
+        rsl_percentile_upp = upp_rsl,
+        rsl_uncertainty_low = rsl_unc_low,
+        rls_uncertainty_upp = rsl_unc_upp,
+        rsl_indicator_type = rsl_filter,
+        merging_slips = selected_slip,
+        merging_points_per_slip = points_per_slip,
+        sampling_strategy = input$samplingStrategy
+      )
+      
+      metadata_merging <- st_sf(df1, geometry = geom)
+      print(metadata_merging)
+      st_write(metadata_merging, paste0(name, '.geojson'))
+      # Saving zip file
+      fs <- c(fs, paste0(name, '.csv'))
+      fs <- c(fs, paste0(name, '.geojson'))
+      zip(zipfile = fname, files = fs)
+      if (file.exists(paste0(fname, ".zip"))) {
+        file.rename(paste0(fname, ".zip"), fname)
+      }
+      setwd(root_path)
+    },
+    contentType = "application/zip"
+  )
+  
+  # Download docker
+  
+  output$download_docker <- downloadHandler(
+    filename = "WALIS_docker.zip",
+    content = function(fname) {
+      file.copy('r/docker_merging/Dockerfile', 'Dockerfile')
+      file.copy('r/docker_merging/renv.lock', 'renv.lock')
+      file.copy('r/docker_merging/run_analysis.R', 'r/run_analysis.R')
+      file.copy('r/docker_merging/readme.md', 'readme.md')
+      file.copy('r/docker_merging/spratt2016stack.bib',
+                'spratt2016stack.bib')
+      
+      # Modify dockerfile
+      
+      dockerfile  <- readLines("Dockerfile")
+      peak_sampling <- 'T'
+      if (input$samplingStrategy != 'Peak sampling') {
+        peak_sampling <- 'F'
+      }
+      dockerfile[8] <-
+        paste(
+          'CMD Rscript r/run_analysis.R Data/walis_merging.csv',
+          input$points_per_slip,
+          peak_sampling,
+          collapse = ' '
+        )
+      writeLines(dockerfile, "Dockerfile")
+      
+      #List with files
+      # Saving R scripts / docker file
+      
+      fs <-
+        c(
+          'readme.md',
+          'Dockerfile',
+          'renv.lock',
+          'spratt2016stack.bib',
+          'r/define_peaks_ranges.R',
+          'r/extract_age.R',
+          'r/extract_rsl.R',
+          'r/join_age_rsl.R',
+          'r/run_analysis.R'
+        )
+      
+      
+      # Saving SLIPS (WALIS) (SLIPs from merging filters)
+      data <- data_in_area_merging$data
+      data_name <- 'Data/walis_merging.csv'
+      
+      data <-
+        data_in_area$data %>% dplyr::mutate(
+          longitude = sf::st_coordinates(.)[, 1],
+          latitude = sf::st_coordinates(.)[, 2]
+        ) %>% st_drop_geometry()
+      
+      drops <-
+        c("marker_color",
+          "In_area",
+          "icon",
+          "marker",
+          "Perc_Paleo_RSL_uncertainty")
+      data <- data[,!(names(data) %in% drops)]
+      data <- data[data$WALIS_ID %in% input$slip_selection, ]
+      
+      write.csv2(
+        data,
+        file = data_name,
+        sep = '\t',
+        quote = TRUE,
+        row.names = FALSE,
+        
+      )
+      
+      # Saving Sea level stack and Walis (SLIPs)
+      
+      fs <- c(fs, 'Data/sea_level_stack_spratt.csv', data_name)
+      
+      zip(zipfile = fname, files = fs)
+      if (file.exists(paste0(fname, ".zip"))) {
+        file.rename(paste0(fname, ".zip"), fname)
+      }
+      file.remove(data_name)
+      file.remove('Dockerfile')
+      file.remove('renv.lock')
+      file.remove('r/run_analysis.R')
+      file.remove('readme.md')
+      file.remove('spratt2016stack.bib')
+    },
+    contentType = "application/zip"
+  )
+  
+  ### Functions Plot Sea level
   
   plot_sea_level <- function(data,
                              type_to_display = c("Marine Limiting",
                                                  "Terrestrial Limiting",
                                                  "Sea Level Indicator"),
                              cloud = data.frame()) {
+    
     # Check if there is a Cloud point
+    
+    set.seed(1)
     
     cloudpoint = TRUE
     if (nrow(cloud) == 0) {
       cloudpoint = FALSE
     }
     
+    num_plot_points <- ifelse(nrow(cloud) < 10000, nrow(cloud), 10000)
+    
     # Select only the type of datapoints requested by the user
     sub_data <-
-      data[data$Type.of.datapoint %in% type_to_display,] %>% st_drop_geometry()
+      data[data$Type.of.datapoint %in% type_to_display, ] %>% st_drop_geometry()
     
     # Retrieve upper age range (from user input: perc_range_age)
     upp_age <- perc_range_age$upp_age
@@ -2261,6 +2977,7 @@ server <- function(input, output) {
               guides(color = 'none')
             )
         } +
+        
         # Terrestrial limiting
         
         {
@@ -2331,7 +3048,7 @@ server <- function(input, output) {
             list(
               new_scale_color(),
               geom_point(
-                data = cloud %>% sample_frac(0.1),
+                data = cloud %>% sample_n(num_plot_points),
                 aes(x = AGE, y = RSL),
                 alpha =
                   0.1
@@ -2368,5 +3085,5 @@ server <- function(input, output) {
   }
 }
 
-# Run the app ----
+# Run the app
 shinyApp(ui = ui, server = server)

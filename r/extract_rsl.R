@@ -30,15 +30,22 @@ sampling_rsl<-function(df,n_samples){
   return(unlist(my_sample))
 }
 
-extract_rsl <- function(df,n_samples){
+extract_rsl <- function(df,n_samples,shiny=TRUE){
+  
   result<- c()
+  
   result$distribution$total <- df[c('WALIS_ID','Type.of.datapoint','RSL.Indicator',
                                     'Upper.limit.of.living.range..m.',
                                     'Lower.limit.of.living.range..m.',
                                     'Paleo.RSL..m.',
                                     'Paleo.RSL.uncertainty..m.',
                                     'Elevation..m.',
-                                    'Elevation.error..m.')] %>% st_drop_geometry()
+                                    'Elevation.error..m.')]
+  
+  if(shiny==TRUE){
+    result$distribution$total <- result$distribution$total %>% st_drop_geometry()
+    }
+
   rsl_type <- unique(result$distribution$total$Type.of.datapoint)[[1]]
   result$type.of.datapoint <- rsl_type
   

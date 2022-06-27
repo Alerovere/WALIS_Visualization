@@ -28,7 +28,7 @@ peak_intersection<-function(peaks,upp,low){
   return(peaks_in_range)
 }
 
-extract_age <- function(df, n_samples, peaks= c()) {
+extract_age <- function(df, n_samples, peaks= c(),shiny=TRUE) {
   
   # Sample around peaks FALSE
   uniform_peaks <-  FALSE
@@ -40,9 +40,12 @@ extract_age <- function(df, n_samples, peaks= c()) {
   
   merge <- c()
   merge$distributions$total <- df[c('WALIS_ID','Type.of.datapoint','RSL.Indicator',
-                                  'Age.calculation.from','Age_mu','Age_2s',
-                                  'Lower.age','Upper.age')]  %>% st_drop_geometry()
-  
+                                    'Age.calculation.from','Age_mu','Age_2s',
+                                    'Lower.age','Upper.age')]
+  if(shiny==TRUE){
+    merge$distributions$total <- merge$distributions$total %>% st_drop_geometry()
+  }
+
   rsl_type <- unique(merge$distributions$total$Type.of.datapoint)[[1]]
   merge$type.of.datapoint <- rsl_type
   merge$distributions$total$prob <- 1 / nrow(merge$distributions$total)
