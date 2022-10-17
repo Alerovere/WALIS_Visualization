@@ -11,6 +11,7 @@ library(leaflet)
 library(leaflet.extras)
 library(shinyjs)
 library(readr)
+library(data.table)
 library(DT)
 library(dplyr)
 library(sf)
@@ -1641,7 +1642,7 @@ server <- function(input, output) {
     }
   })
   
-  # Drar new feature
+  # Draw new feature
   
   observeEvent(input$inter_tab_map_draw_new_feature, {
     feature <- input$inter_tab_map_draw_new_feature
@@ -1746,6 +1747,9 @@ server <- function(input, output) {
           )
         )
       
+      matrix_area <- data.matrix(area$coord)
+      polygon <- st_polygon(list(matrix_area)) %>% st_sfc(crs = 4326)
+      
       data <-
         data_in_area$data %>% dplyr::mutate(
           longitude = sf::st_coordinates(.)[, 1],
@@ -1761,56 +1765,69 @@ server <- function(input, output) {
           "Perc_Paleo_RSL_uncertainty"
         )
       data <- data[,!(names(data) %in% drops)]
-      con <- file(filename, 'wt')
+      
+      # Write table
+      
+      matrix_area <- data.matrix(area$coord)
+      polygon <- st_polygon(list(matrix_area)) %>% st_sfc(crs = 4326)
+      
+      fwrite(x = data,
+             file = filename,sep=';')
+      
+      # Write metadata
+      
       cat(
         paste0(
           '#Publisher:WALIS-https://warmcoasts.eu/world-atlas.html',
           '\n'
         ),
-        file = con
+        file = filename,
+        append = TRUE
       )
-      cat(paste0('#FILTERS', '\n'), file = con)
+      cat(paste0('#FILTERS', '\n'), file = filename,
+          append = TRUE)
       cat(paste0('#Age range (ka): ', input$temp[1], "-", input$temp[2], '\n'),
-          file = con)
+          file = filename,
+          append = TRUE)
       cat(
         paste0(
           '#Percentiles range [Age]: ',
           perc_range_age$low_age,
           "-",
-          perc_range_age$upp_age,
-          '\n'
+          perc_range_age$upp_age, '\n'
         ),
-        file = con
+        file = filename,
+        append = TRUE
       )
       cat(paste0('#Dating techniques: ', paste(
         unlist(input$dating_tech), collapse = '/'
-      ), '\n'), file = con)
+      ), '\n'), file = filename,
+      append = TRUE)
       cat(paste0('#Elevation error: ', paste(unlist(
         input$elev_error
-      ), collapse = '/'), '\n'), file = con)
+      ), collapse = '/'), '\n'), file = filename,
+      append = TRUE)
       cat(
         paste0(
           '#Percentiles range  [Paleo RSL]: ',
           perc_range_rsl$low_rsl,
           "-",
-          perc_range_rsl$upp_rsl,
-          '\n'
+          perc_range_rsl$upp_rsl, '\n'
         ),
-        file = con
+        file = filename,
+        append = TRUE
       )
       cat(paste0(
         '#Uncertainty (m) [Paleo RSL]: ',
-        paste(unlist(input$elev_uncert), collapse = '-'),
-        '\n'
-      ), file = con)
+        paste(unlist(input$elev_uncert), collapse = '-'),"\n"), file = filename,
+      append = TRUE)
       cat(paste0('#RSL indicator type: ', paste(
-        unlist(input$type_indicators), collapse = '/'
-      ), '\n'), file = con)
-      cat(paste0('#Extent', '\n'), file = con)
-      write.table(data,
-                  file = con,
-                  row.names = FALSE,
-                  sep = ";")
+        gsub(",","",unlist(input$type_indicators)), collapse = '/'
+      ),'\n'), file = filename,
+      append = TRUE)
+      cat(paste0('#Extent(Well-known text):'),st_as_text(polygon),file = filename,
+          append = TRUE)
+
     }
   )
 
@@ -1971,6 +1988,9 @@ server <- function(input, output) {
           )
         )
       
+      matrix_area <- data.matrix(area$coord)
+      polygon <- st_polygon(list(matrix_area)) %>% st_sfc(crs = 4326)
+      
       data <-
         data_in_area$data %>% dplyr::mutate(
           longitude = sf::st_coordinates(.)[, 1],
@@ -1986,56 +2006,65 @@ server <- function(input, output) {
           "Perc_Paleo_RSL_uncertainty"
         )
       data <- data[,!(names(data) %in% drops)]
-      con <- file(filename, 'wt')
+      
+      # Write table
+      
+      fwrite(x = data,
+             file = filename,sep=';')
+      
+      # Write metadata
+      
       cat(
         paste0(
           '#Publisher:WALIS-https://warmcoasts.eu/world-atlas.html',
           '\n'
         ),
-        file = con
+        file = filename,
+        append = TRUE
       )
-      cat(paste0('#FILTERS', '\n'), file = con)
+      cat(paste0('#FILTERS', '\n'), file = filename,
+          append = TRUE)
       cat(paste0('#Age range (ka): ', input$temp[1], "-", input$temp[2], '\n'),
-          file = con)
+          file = filename,
+          append = TRUE)
       cat(
         paste0(
           '#Percentiles range [Age]: ',
           perc_range_age$low_age,
           "-",
-          perc_range_age$upp_age,
-          '\n'
+          perc_range_age$upp_age, '\n'
         ),
-        file = con
+        file = filename,
+        append = TRUE
       )
       cat(paste0('#Dating techniques: ', paste(
         unlist(input$dating_tech), collapse = '/'
-      ), '\n'), file = con)
+      ), '\n'), file = filename,
+      append = TRUE)
       cat(paste0('#Elevation error: ', paste(unlist(
         input$elev_error
-      ), collapse = '/'), '\n'), file = con)
+      ), collapse = '/'), '\n'), file = filename,
+      append = TRUE)
       cat(
         paste0(
           '#Percentiles range  [Paleo RSL]: ',
           perc_range_rsl$low_rsl,
           "-",
-          perc_range_rsl$upp_rsl,
-          '\n'
+          perc_range_rsl$upp_rsl, '\n'
         ),
-        file = con
+        file = filename,
+        append = TRUE
       )
       cat(paste0(
         '#Uncertainty (m) [Paleo RSL]: ',
-        paste(unlist(input$elev_uncert), collapse = '-'),
-        '\n'
-      ), file = con)
+        paste(unlist(input$elev_uncert), collapse = '-'),"\n"), file = filename,
+        append = TRUE)
       cat(paste0('#RSL indicator type: ', paste(
-        unlist(input$type_indicators), collapse = '/'
-      ), '\n'), file = con)
-      cat(paste0('#Extent', '\n'), file = con)
-      write.table(data,
-                  file = con,
-                  row.names = FALSE,
-                  sep = ";")
+        gsub(",","",unlist(input$type_indicators)), collapse = '/'
+      ),'\n'), file = filename,
+      append = TRUE)
+      cat(paste0('#Extent(Well-known text):'),st_as_text(polygon),file = filename,
+          append = TRUE)
     }
   )
   
@@ -2209,7 +2238,7 @@ server <- function(input, output) {
     return(selected_slip)
   })
   
-  # Update SLIP in area for mergning
+  # Update SLIP in area for merging
   
   in_area_merging <- observeEvent(c(data_in_area,
                                     slip_sel$val),
@@ -2568,7 +2597,7 @@ server <- function(input, output) {
       
       # Writing csv file with cloud point
       
-      write.table(
+      write.csv2(
         merging_point_cloud$data,
         file = paste0(name, '.csv'),
         sep = ',',
@@ -2576,6 +2605,7 @@ server <- function(input, output) {
         col.names = c('WALIS_ID', 'RSL(m)', 'Age(ka)'),
       )
       
+    
       # Writing geojson with cloudpoint processing metadata
       
       #TRABAJO
@@ -2727,14 +2757,9 @@ server <- function(input, output) {
       data <- data[,!(names(data) %in% drops)]
       data <- data[data$WALIS_ID %in% input$slip_selection, ]
       
-      write.csv2(
-        data,
-        file = data_name,
-        sep = '\t',
-        quote = TRUE,
-        row.names = FALSE,
-        
-      )
+      fwrite(data,
+                  file = data_name,
+                  sep = ";")
       
       # Saving Sea level stack and Walis (SLIPs)
       
