@@ -1,0 +1,13 @@
+name: WALIS_Visualization
+title: WALIS_Visualization
+username:
+account: warmcoasts
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 4252866
+bundleId: 4700889
+url: https://warmcoasts.shinyapps.io/WALIS_Visualization/
+when: 1623327855.91428
+lastSyncTime: 1623327855.91428
+asMultiple: FALSE
+asStatic: FALSE
