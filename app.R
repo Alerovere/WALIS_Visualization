@@ -1,6 +1,7 @@
 # Load packages
 
 ## Shiny app packages
+
 library(shiny)
 library(shinydashboard)
 library(shinydashboardPlus)
@@ -1050,7 +1051,7 @@ ui <-
                            ),
                            p(),
                            p(
-                             'This process is repeated for all the SLIPs in the selection. The final result is a cloudpoint of Age and RSL values.'
+                             'This process is repeated for all the SLIPs in the selection. The final result is a point cloud of Age and RSL values.'
                            )
                          )
                        ))
@@ -1060,7 +1061,7 @@ ui <-
                 column(
                   12,
                   p(
-                    'In this tab, you can transform the sea-level index points (SLIPs) from your selection into a cloud point of Relative Sea-level (RSL) and Age values.
+                    'In this tab, you can transform the sea-level index points (SLIPs) from your selection into a point cloud of Relative Sea-level (RSL) and Age values.
                  Only SLIPS with a timing constraint "Equal to"',
                     strong(icon("plus-square", style = "color:cyan")),
                     ' can be merged.'
@@ -1128,7 +1129,7 @@ ui <-
                                strong('⚈ Points per SLIP', style = "font-size:15px;"),
                                p(),
                                p(
-                                 'This is the number of points per individual SLIPs to be sampled. For example, if the user has 3 SLIPs and defines 10.000 points per SLIP ⚈, the resulting cloudpoint will have 30.000 points.'
+                                 'This is the number of points per individual SLIPs to be sampled. For example, if the user has 3 SLIPs and defines 10.000 points per SLIP ⚈, the resulting point cloud will have 30.000 points.'
                                ),
                                p(
                                  'Walis-Explorer limits the number of points per SLIP depending on the number of SLIPs selected. If you want to do analysis beyond our limits, download a',
@@ -1141,7 +1142,7 @@ ui <-
                   
                   ,
                   p(
-                    'Define the merging parameters and filter the SLIPs by WALIS ID to generate the cloudpoint. Once you are ready, press',
+                    'Define the merging parameters and filter the SLIPs by WALIS ID to generate the point cloud. Once you are ready, press',
                     strong(" \U25B8 Start merging")
                   ),
                   fluidRow(
@@ -1189,7 +1190,7 @@ ui <-
                   fluidRow(valueBoxOutput('slip_equal', width = 12)),
                   fluidRow(valueBoxOutput('terrestrial_limiting', width = 12)),
                   fluidRow(valueBoxOutput('marine_limiting', width = 12)),
-                  fluidRow(valueBoxOutput('cloudpoint', width = 12))
+                  fluidRow(valueBoxOutput('pointcloud', width = 12))
                 )
               ),
               fluidRow(column(
@@ -1216,13 +1217,13 @@ ui <-
               column(4,
                      disabled(
                        checkboxGroupButtons(
-                         inputId = "elements_merge_cloudpoint",
-                         label = "Cloudpoint elements to display:",
+                         inputId = "elements_merge_pointcloud",
+                         label = "Point cloud elements to display:",
                          choices = c(
-                           `Cloudpoint <i class="far fa-dot-circle"></i>` = "cloudpoint",
+                           `Point cloud <i class="far fa-dot-circle"></i>` = "pointcloud",
                            `Density <i class="fas fa-shapes"></i>` = "2ddensity"
                          ),
-                         selected = c('cloudpoint'),
+                         selected = c('pointcloud'),
                          checkIcon = list(
                            yes = icon("ok",
                                       lib = "glyphicon"),
@@ -2258,7 +2259,7 @@ server <- function(input, output) {
                                                                       data_in_area$data$Age.calculation.from != 'Radiometric dating', 'WALIS_ID'] %>%
                                                     st_drop_geometry()))
                                     print(data_in_area_merging$num)
-                                    disable('elements_merge_cloudpoint')
+                                    disable('elements_merge_pointcloud')
                                     return("Change")
                                   })
   
@@ -2288,7 +2289,7 @@ server <- function(input, output) {
       fluidPage(
         p(strong('Download menu'), style = "font-size:22px;"),
         p(
-          'You can directly download the cloudpoint in a file',
+          'You can directly download the point cloud in a file',
           strong(icon("file-download")),
           '
         or a docker container ',
@@ -2298,9 +2299,9 @@ server <- function(input, output) {
         fluidRow(column(
           6,
           downloadButton(
-            outputId = "download_cloudpoint",
+            outputId = "download_pointcloud",
             icon = icon("file-download"),
-            label = "Cloudpoint",
+            label = "Point cloud",
             style = "color: #fff; background-color: #2c3e50;border-color: #FFFFFF",
             color = "primary"
           )
@@ -2373,17 +2374,17 @@ server <- function(input, output) {
     color = 'red'
   ))
   
-  output$cloudpoint <- renderValueBox({
+  output$pointcloud <- renderValueBox({
     color <- 'orange'
     icon_value <- 'times-circle'
     message <- icon(icon_value)
-    subtitle <- 'No cloudpoint'
+    subtitle <- 'No point cloud'
     
     if (nrow(merging_point_cloud$data) > 0) {
       icon_value <- 'check-circle'
       message <- icon(icon_value)
       color <- 'olive'
-      subtitle <- 'Cloudpoint available'
+      subtitle <- 'Point cloud available'
     }
     
     valueBox(value = message,
@@ -2528,7 +2529,7 @@ server <- function(input, output) {
         sli_area = data.frame()
       }
       merging_point_cloud$data <- sli_area
-      enable('elements_merge_cloudpoint')
+      enable('elements_merge_pointcloud')
       return('Change')
     }
   })
@@ -2542,17 +2543,17 @@ server <- function(input, output) {
   ### Reactive element to store elements to plot (e.g Limiting data & Sea level indicators)
   elements_plot_merge <- reactiveValues(elements = c())
   
-  # Observe User input from 4 Buttons (Terrestrial lim. - Marine lim. - Cloudpoint - Density)
+  # Observe User input from 4 Buttons (Terrestrial lim. - Marine lim. - pointcloud - Density)
   observeEvent(c(
     input$elements_merge_indicators,
-    input$elements_merge_cloudpoint
+    input$elements_merge_pointcloud
   ),
   {
     selection_elements <-
       c(input$elements_merge_indicators,
-        input$elements_merge_cloudpoint)
+        input$elements_merge_pointcloud)
     print(length(input$elements_merge_indicators))
-    print(length(input$elements_merge_cloudpoint))
+    print(length(input$elements_merge_pointcloud))
     elements_plot_merge$elements <- selection_elements
   })
   
@@ -2568,10 +2569,10 @@ server <- function(input, output) {
     )
   })
   
-  # Download cloudpoint
+  # Download point cloud
   
-  output$download_cloudpoint <- downloadHandler(
-    filename = "WALIS_cloudpoint.zip",
+  output$download_pointcloud <- downloadHandler(
+    filename = "WALIS_pointcloud.zip",
     content = function(fname) {
       # Random code for download option
       
@@ -2595,7 +2596,7 @@ server <- function(input, output) {
       fs <- c()
       setwd(tempdir())
       
-      # Writing csv file with cloud point
+      # Writing csv file with point cloud
       
       write.csv2(
         merging_point_cloud$data,
@@ -2606,7 +2607,7 @@ server <- function(input, output) {
       )
       
     
-      # Writing geojson with cloudpoint processing metadata
+      # Writing geojson with pointcloud processing metadata
       
       #TRABAJO
       # Extracting parameters:
@@ -2698,16 +2699,16 @@ server <- function(input, output) {
   output$download_docker <- downloadHandler(
     filename = "WALIS_docker.zip",
     content = function(fname) {
-      file.copy('r/docker_merging/Dockerfile', 'Dockerfile')
-      file.copy('r/docker_merging/renv.lock', 'renv.lock')
+      file.copy('r/docker_merging/Dockerfile_container', 'Dockerfile_container')
+      file.copy('r/docker_merging/renv_container.lock', 'renv_container.lock')
       file.copy('r/docker_merging/run_analysis.R', 'r/run_analysis.R')
-      file.copy('r/docker_merging/readme.md', 'readme.md')
+      file.copy('r/docker_merging/readme.md', 'readme_container.md')
       file.copy('r/docker_merging/spratt2016stack.bib',
                 'spratt2016stack.bib')
       
       # Modify dockerfile
       
-      dockerfile  <- readLines("Dockerfile")
+      dockerfile  <- readLines("Dockerfile_container")
       peak_sampling <- 'T'
       if (input$samplingStrategy != 'Peak sampling') {
         peak_sampling <- 'F'
@@ -2719,16 +2720,16 @@ server <- function(input, output) {
           peak_sampling,
           collapse = ' '
         )
-      writeLines(dockerfile, "Dockerfile")
+      writeLines(dockerfile, "Dockerfile_container")
       
       #List with files
       # Saving R scripts / docker file
       
       fs <-
         c(
-          'readme.md',
-          'Dockerfile',
-          'renv.lock',
+          'readme_container.md',
+          'Dockerfile_container',
+          'renv_container.lock',
           'spratt2016stack.bib',
           'r/define_peaks_ranges.R',
           'r/extract_age.R',
@@ -2770,10 +2771,10 @@ server <- function(input, output) {
         file.rename(paste0(fname, ".zip"), fname)
       }
       file.remove(data_name)
-      file.remove('Dockerfile')
-      file.remove('renv.lock')
       file.remove('r/run_analysis.R')
-      file.remove('readme.md')
+      file.remove('Dockerfile_container')
+      file.remove('renv_container.lock')
+      file.remove('readme_container.md')
       file.remove('spratt2016stack.bib')
     },
     contentType = "application/zip"
@@ -2787,13 +2788,13 @@ server <- function(input, output) {
                                                  "Sea Level Indicator"),
                              cloud = data.frame()) {
     
-    # Check if there is a Cloud point
+    # Check if there is a Point cloud
     
     set.seed(1)
     
-    cloudpoint = TRUE
+    pointcloud = TRUE
     if (nrow(cloud) == 0) {
-      cloudpoint = FALSE
+      pointcloud = FALSE
     }
     
     num_plot_points <- ifelse(nrow(cloud) < 10000, nrow(cloud), 10000)
@@ -2820,7 +2821,7 @@ server <- function(input, output) {
     
     ## Plot message if there is no information selected
     
-    if (nrow(sub_data) == 0 & cloudpoint == FALSE) {
+    if (nrow(sub_data) == 0 & pointcloud == FALSE) {
       text = paste("No data for this selection\n")
       p <- ggplot() +
         annotate(
@@ -3069,7 +3070,7 @@ server <- function(input, output) {
             )
         } +
         {
-          if ('cloudpoint' %in% type_to_display & cloudpoint)
+          if ('pointcloud' %in% type_to_display & pointcloud)
             list(
               new_scale_color(),
               geom_point(
@@ -3082,7 +3083,7 @@ server <- function(input, output) {
             )
         } +
         {
-          if ('2ddensity' %in% type_to_display & cloudpoint)
+          if ('2ddensity' %in% type_to_display & pointcloud)
             list(
               new_scale_color(),
               new_scale_fill(),

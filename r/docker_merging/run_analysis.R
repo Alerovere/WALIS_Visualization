@@ -19,7 +19,7 @@ processing <- function(dataset_file,n_sampling,sl_peaks_s){
   
   set.seed(200)
   # Load dataset
-  walis_df <- read.csv(dataset_file,sep=',')
+  walis_df <- read.csv(dataset_file,sep=';')
   
   #Patch
   
