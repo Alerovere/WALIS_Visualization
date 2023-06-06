@@ -2702,7 +2702,7 @@ server <- function(input, output) {
       file.copy('r/docker_merging/Dockerfile_container', 'Dockerfile_container')
       file.copy('r/docker_merging/renv_container.lock', 'renv_container.lock')
       file.copy('r/docker_merging/run_analysis.R', 'r/run_analysis.R')
-      file.copy('r/docker_merging/readme.md', 'readme_container.md')
+      file.copy('r/docker_merging/readme_container.md', 'readme_container.md')
       file.copy('r/docker_merging/spratt2016stack.bib',
                 'spratt2016stack.bib')
       
