@@ -6,3 +6,4 @@
 .DS_Store
 # CSV(temporal)
 .csv
+.Rproj.user
