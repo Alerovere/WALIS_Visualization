@@ -119,27 +119,18 @@ ui <-
               )),
               br(),
               p(
-                "As part of the",
-                a("WARMCOASTS project", href = "https://warmcoasts.eu/index.html"),
-                "and in collaboration with",
-                a("PALSEA", href = "https://palseagroup.weebly.com/"),
-                " (a PAGES-INQUA working group),
-                               we launched WALIS.
-                               WALIS aims at collecting existing and new data on Last Interglacial sea-level indicators reviewed following a standardized template.",
-                style = "font-size:12px;text-align:justify"
+                "The World Atlas of Last Interglacial Shorelines (WALIS) is a sea-level database created by the",
+                a("WARMCOASTS project.", href = "https://warmcoasts.eu/index.html"),
+                br(),
+                "WALIS aims at collecting existing and new data on Last Interglacial sea-level indicators reviewed following a standardized template.",
+                "The WALIS Dashboard was created to explore WALIS and perform simple data analysis."
               ),
-              p(
-                strong("WALIS EXPLORER"),
-                " is one of the tools designed to easily explore the Last Interglacial sea-level indicators available in ",
-                strong("WALIS"),
-                ".",
-                style = "font-size:12px;text-align:justify"
-              ),
+              br(),
               p("Keep exploring WALIS in the following resources:", style =
-                  "font-size:12px;text-align:justify"),
+                  "font-size:14px;text-align:justify"),
               fluidRow(
                 column(
-                  4,
+                  6,
                   br(),
                   p(
                     a(icon("desktop", "fa-4x"), href = "https://warmcoasts.eu/world-atlas.html"),
@@ -147,11 +138,11 @@ ui <-
                   ),
                   p(
                     "Visualize and download WALIS. You can also contribute with new data !",
-                    style = "font-size:10px;text-align:justify"
+                    style = "font-size:12px;text-align:justify"
                   )
                 ),
                 column(
-                  4,
+                  6,
                   br(),
                   p(a(icon(
                     "code-branch", "fa-4x"
@@ -160,17 +151,7 @@ ui <-
                     "Fork our ",
                     strong(icon('github'), 'WALIS-Explorer '),
                     "repository to create new features to explore WALIS. You can also report issues and create pull requests.",
-                    style = "font-size:10px;text-align:justify"
-                  ),
-                ),
-                column(
-                  4,
-                  br(),
-                  p(a(icon("twitter", "fa-4x"), href = "https://twitter.com/WALISDatabase"), style =
-                      "text-align:center"),
-                  p(
-                    "Feed of the work-in-progress research effort to build a World Atlas of Last Interglacial Shorelines",
-                    style = "font-size:10px;text-align:justify"
+                    style = "font-size:12px;text-align:justify"
                   ),
                 )
               ),
@@ -179,8 +160,8 @@ ui <-
                 br(),
                 ## Funding
                 'This software is part of a project that has received funding from the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation programme (Grant agreement No.',
-                a('ERC-StG-802414', href = 'https://cordis.europa.eu/project/id/802414/it'),
-                '. Sebastian Garzon was also funded by the',
+                a('ERC-StG-802414).', href = 'https://cordis.europa.eu/project/id/802414/it'),
+                'Sebastian Garzon was also funded by the',
                 a('Data Stewardship Scholarship', href = 'https://pastglobalchanges.org/science/wg/palsea/data'),
                 'by',
                 a('PAGES.', href = 'https://pastglobalchanges.org/'),
@@ -215,14 +196,14 @@ ui <-
           
           p(
             "Welcome to ",
-            strong("WALIS EXPLORER"),
-            ". Customize your search and graphics by changing the parameters in the",
+            strong("WALIS Dashboard."),
+            " In this page, you can customize your search and graphics by changing the parameters in the ",
             strong(icon("stopwatch"), "Age filter", style = "color: blue"),
             ",",
             strong(icon("filter", "glyphicon"), "RSL indicator filter", style = "color: orange"),
             ",",
-            strong(icon("globe", lib = "glyphicon"), "Geographic Extent", style = "color: green"),
-            "and ",
+            strong(icon("globe", lib = "glyphicon"), "Geographic Extent,", style = "color: green"),
+            " and ",
             strong("\U25c8 Indicator type (map)", style = "color: red"),
             " menu.",
             style = "font-size:15px;text-align:justify"
@@ -253,8 +234,8 @@ ui <-
                     selected = c(500, 0),
                     width = "100%",
                     post = " (ka)",
-                    
-                  )
+                  ),
+
                 ),
                 column(
                   4,
@@ -262,7 +243,8 @@ ui <-
                   p(
                     style = "font-size:10px;text-align:justify",
                     "Select the Age Range of your query.
-            Only RSL within this range are going to be displayed."
+            Only RSL within this range are going to be displayed.",
+                    strong("Tip: Use the arrow keys ◄ ► on your keyboard to fine-tune the values.")
                   )
                 ))
                 ,
@@ -339,7 +321,13 @@ ui <-
                     style = "font-size:10px;text-align:justify",
                     "Select RSL by dating technique. Only RSL dated with these techniques are going to be displayed."
                   )
-                ))
+                ),
+                
+                # Reset button
+                fluidRow(
+                  column(12, offset = 3,
+                actionBttn("resetFilters", "Reset filters", icon("refresh"),color="primary",size="md")
+                )))
                 ,
                 circle = TRUE,
                 status = "info",
@@ -375,7 +363,8 @@ ui <-
                   br(),
                   p(
                     style = "font-size:10px;text-align:justify",
-                    "Select a range of errors associated with the elevation measurement. This variable applies to all types of RSL indicators."
+                    "Select a range of errors associated with the elevation measurement. This variable applies to all types of RSL indicators.",
+                    strong("Tip: Use the arrow keys ◄ ► on your keyboard to fine-tune the values.")
                   )
                 )),
                 
@@ -412,8 +401,7 @@ ui <-
                     br(),
                     p(
                       style = "font-size:10px;text-align:justify",
-                      "Elevations of Sea level index points (SLI) are represented as probability distribution functions.
-                                    Select the percentiles used for SLI points elevations."
+                      "Elevations of SLIPs are represented as probability distribution functions. Select the percentiles used for SLIP elevations."
                     )
                   )
                 ),
@@ -439,7 +427,8 @@ ui <-
                            br(),
                            p(
                              style = "font-size:10px;text-align:justify",
-                             "Select a range of Paleo RSL uncertainty (m) for Sea level index points (SLI). This variable does not applies to Limiting (Marine or Terrestrial) RSL."
+                             "Select a range of Paleo RSL uncertainty (m) for SLIPs. This variable does not applies to Limiting (Marine or Terrestrial) index points.",
+                             strong("Tip: Use the arrow keys ◄ ► on your keyboard to fine-tune the values.")
                            )
                          )
                        ))),
@@ -448,7 +437,7 @@ ui <-
                   
                   # RSL filter menu 
                   
-                  strong("RSL filter menu"),
+                  strong("Select type of RSL indicator"),
                   selectInput(
                     inputId = 'type_indicators',
                     label = NULL,
@@ -462,7 +451,13 @@ ui <-
                   2,
                   br(),
                   p(style = "font-size:10px;text-align:justify", "Add and remove RSL Indicator types.")
-                ))
+                )
+                
+                ),
+                fluidRow(
+                  column(12, offset = 4,
+                         actionBttn("resetFilters2", "Reset filters", icon("refresh"),color="warning",size="md"))
+                )
                 ,
                 circle = TRUE,
                 status = "warning",
@@ -488,8 +483,8 @@ ui <-
                     inputId = "geo",
                     label = "Area of interest:",
                     choices = c(
-                      `<i class="far fa-square"></i> From extent of map` = "map",
-                      `<i class="fas fa-draw-polygon"></i> From polygon (draw)` = "polygon"
+                      `<i class="far fa-square"></i> From map extent` = "map",
+                      `<i class="fas fa-draw-polygon"></i> Draw polygon` = "polygon"
                     ),
                     selected = c("map"),
                     justified = TRUE,
@@ -501,14 +496,11 @@ ui <-
                   6,
                   br(),
                   p(
-                    "Select the area of interest selection method. ",
-                    icon("square"),
-                    strong('From extend of map'),
-                    "uses the current area of the map.",
-                    icon("draw-polygon"),
-                    strong('From polygon'),
-                    "enables a drawing selection tool.",
-                    style = "font-size:10px;text-align:justify",
+                    "Select the method to outline the area of interest.",
+                    strong(icon("square"),"From map extent"),
+                    "uses the current area displayed in the map",
+                    strong(icon("draw-polygon"),"Draw polygon"),
+                    "enables a drawing tool."
                   )
                 ))
                 ,
@@ -541,9 +533,7 @@ ui <-
               strong("Summary Table"),
               p(
                 style = "font-size:10px;text-align:justify",
-                "Summary table consist on a portion of WALIS. The table
-                contains the most relevant information for each RSL.
-                For more details download the full WALIS Database."
+                "The Summary Table is a reduced version of WALIS, containing only fundamental information on SLIPs and their age."
               )
               ,
               fluidRow(column(
@@ -565,7 +555,7 @@ ui <-
               strong("WALIS - Database"),
               p(
                 style = "font-size:10px;text-align:justify",
-                "Full WALIS Database. The database includes files, scripts and metadata required to produce the Summary table."
+                "The full WALIS database is available at the repository linked below. Besides the data, the repository includes scripts to query and analyze WALIS, including the scripts to create the Summary Table used in the Dashboard."
               ),
               fluidRow(column(
                 6,
@@ -575,7 +565,7 @@ ui <-
                   label = "WALIS - Database",
                   width = "100%",
                   icon = icon("database"),
-                  onclick = "window.open('https://zenodo.org/communities/walis_database?page=1&size=20')"
+                  onclick = "window.open('https://zenodo.org/records/7348242')"
                 ),
               ),
               column(
@@ -593,16 +583,8 @@ ui <-
               column(
                 12,
                 p(
-                  style = "font-size:10px;text-align:justify",
-                  "WALIS is the result of the work of several people, within different projects. We kindly ask you to follow three simple rules to properly acknowledge those who worked on it: ",
-                  strong("1. Cite the original authors"),
-                  br(),
-                  strong("2. Acknowledge the database contributor"),
-                  br(),
-                  strong("3. Acknowledge the database structure creators"),
-                  br(),
                   a("More details and examples on how to cite", href =
-                      "https://walis-help.readthedocs.io/en/latest/citation/")
+                      "https://walis-help.readthedocs.io/en/stable/citation/")
                 )
               )),
               width = "400px",
@@ -872,21 +854,14 @@ ui <-
       value = "Summary_table",
       icon = icon("book"),
       fluidPage(
-        strong("Last Interglacial sea-level indicators"),
         p(
-          "This tab contains the",
-          strong("Summary table"),
-          "of the current selection of RSL.",
-          strong(icon("stopwatch"), "Age", style = "color: blue"),
-          ",",
-          strong(icon("filter", "glyphicon"), "RSL indicator", style = "color: orange"),
-          " and ",
-          strong("\U25c8 Indicator type (map)", style = "color: red"),
-          " filters, as well as the",
-          strong(icon("globe", lib = "glyphicon"), "Geographic Extent", style = "color: green"),
-          " of the current selection, are summarized in the following section.",
-          "You can modify the selection in the ",
-          strong(icon("map"), "Interactive map tab.")
+          "In this page you can explore and download the",
+          strong(icon("book"),"Summary table"),
+          "of the current selection.",
+          strong("All the filters applied to the data"), "are summarized below.",
+          "You can modify these filters in the",
+          strong(icon("map"), "Interactive map tab"),
+          "Cells in the Summary table are blank when no data is present in WALIS for the corresponding property."
         )
         ,
         fluidRow(
@@ -903,15 +878,18 @@ ui <-
             2,
             strong("Download"),
             br(),
+            
+            
+            #######
+            
+            
             dropdownButton(
               strong("Download menu", style = "font-size:20px"),
               br(),
               strong("Summary Table"),
               p(
                 style = "font-size:10px;text-align:justify",
-                "Summary table consist on a portion of WALIS. The table
-                contains the most relevant information for each RSL.
-                For more details download the full WALIS Database."
+                "The Summary Table is a reduced version of WALIS, containing only fundamental information on SLIPs and their age."
               )
               ,
               fluidRow(column(
@@ -923,14 +901,17 @@ ui <-
                   style = "font-size:10px;text-align:justify",
                   "Download",
                   strong("summary table") ,
-                  "of current RSL selection."
+                  "of current RSL selection.
+                         You can preview the content of this file in the",
+                  icon("book"),
+                  strong("Summary table tab.")
                 )
               )),
               br(),
               strong("WALIS - Database"),
               p(
                 style = "font-size:10px;text-align:justify",
-                "Full WALIS Database. The database includes files, scripts and metadata required to produce the Summary table."
+                "The full WALIS database is available at the repository linked below. Besides the data, the repository includes scripts to query and analyze WALIS, including the scripts to create the Summary Table used in the Dashboard."
               ),
               fluidRow(column(
                 6,
@@ -940,7 +921,7 @@ ui <-
                   label = "WALIS - Database",
                   width = "100%",
                   icon = icon("database"),
-                  onclick = "window.open('https://zenodo.org/communities/walis_database?page=1&size=20')"
+                  onclick = "window.open('https://zenodo.org/records/7348242')"
                 ),
               ),
               column(
@@ -958,20 +939,13 @@ ui <-
               column(
                 12,
                 p(
-                  style = "font-size:10px;text-align:justify",
-                  "WALIS is the result of the work of several people, within different projects. We kindly ask you to follow three simple rules to properly acknowledge those who worked on it: ",
-                  strong("1. Cite the original authors"),
-                  br(),
-                  strong("2. Acknowledge the database contributor"),
-                  br(),
-                  strong("3. Acknowledge the database structure creators"),
-                  br(),
                   a("More details and examples on how to cite", href =
-                      "https://walis-help.readthedocs.io/en/latest/citation/")
+                      "https://walis-help.readthedocs.io/en/stable/citation/")
                 )
               )),
               right = TRUE,
               width = "400px",
+              size = "sm",
               status = "primary",
               icon = icon("download", "fa-1x"),
               tooltip = tooltipOptions(title = "Download menu")
@@ -1089,7 +1063,7 @@ ui <-
                                   p(
                                     strong('Filtering and merging options'), style = "font-size:22px;"
                                   )),
-                           #Trabajo
+                           
                            column(
                              2,
                              dropdownButton(
@@ -1105,27 +1079,6 @@ ui <-
                                  11,
                                  strong("The World Atlas of Last Interglacial Shorelines", style = "font-size:15px;")
                                )),
-                               p(),
-                               strong('📐Sampling strategy', style = "font-size:15px;"),
-                               p(),
-                               p(
-                                 'There are two sampling strategies options depending on the SLIPs selection'
-                               ),
-                               strong('- Peak sampling'),
-                               p(
-                                 'This method is only available for SLIPs with Uniform Age distribution that comes from an MIS assignment.
-                                       In this method, the uniform ranges from MIS assignments are modified to match high stand periods defined using the sea-level stack published by',
-                                 a('Spratt and  Lisiecki (2016)', href = 'https://doi.org/10.5194/cp-12-1079-2016'),
-                                 '.'
-                               ),
-                               p(
-                                 'Then a single Uniform range from an MIS assignment could result in multiple (shorter) ranges.'
-                               ),
-                               strong('- Regular sampling'),
-                               p(
-                                 'In this sampling method, the ranges from the Uniform Age distributions are not modified. For selections that only include Age calculations from Radiometric dating, this is the only option.'
-                               ),
-                               p(),
                                strong('⚈ Points per SLIP', style = "font-size:15px;"),
                                p(),
                                p(
@@ -1147,23 +1100,20 @@ ui <-
                   ),
                   fluidRow(
                     column(6,
-                           uiOutput("merge_tab_samplingstrategy"),
                            useShinyjs(),
                            uiOutput('merge_tab_poinsperslip')),
                     column(6,
-                           uiOutput("merge_tab_slip_filter"),
-                           column(6,
-                                  fluidRow(p(
-                                    ' '
-                                  )),
-                                  fluidRow(
+                           uiOutput("merge_tab_slip_filter")),
+                    fluidRow(
+                           column(12, offset = 3,
+                                  
                                     actionButton(
                                       inputId = "mergeButton",
                                       label = "\U25B8 Start merging",
                                       style = "color: #fff; background-color: #2c3e50;border-color: #FFFFFF"
                                     )
-                                  )))
-                  ),
+                                  )
+                  )),
                   useSweetAlert()
                 ),
                 uiOutput('merge_tab_download')
@@ -1246,7 +1196,8 @@ ui <-
 ############################### SERVER FUNCTION   ##############################
 ################################################################################
 
-server <- function(input, output) {
+server <- function(input, output, session) {
+  
   area <-
     reactiveValues(coord = data.frame(lon = c(0, 0, 0, 0, 0),
                                       lat = c(0, 0, 0, 0, 0)))
@@ -1425,7 +1376,7 @@ server <- function(input, output) {
     print(paste("RSL (after filters)", nrow(df_sub_final)))
     
     return(df_sub_final)
-  })
+  }) %>% debounce(1000)
   
   ########### Render UI ########
   
@@ -1575,6 +1526,34 @@ server <- function(input, output) {
   })
   
   # Observe events - Interactive map
+  
+  
+  observeEvent(input$resetFilters, {
+    # Reset all filters to their initial values
+    updateSliderTextInput(session, inputId = "temp", selected = c(500, 0))
+    updateRadioGroupButtons(session, inputId = "perc_age", selected = c("1"))
+    updateCheckboxGroupButtons(session, inputId = "dating_tech", selected = c(
+      "U-Series",
+      "AAR",
+      "ESR",
+      "Luminescence",
+      "Stratigraphic constraint",
+      "Other age constraint"
+    ))
+  })
+  
+  
+  observeEvent(input$resetFilters2, {
+    # Reset all filters for the RSL Indicator Filter menu
+    updateSliderTextInput(session, inputId = "elev_error", selected = c(0, "More than 20"))
+    updateRadioGroupButtons(session, inputId = "perc_elev", selected = c("1"))
+    updateSliderTextInput(session, inputId = "elev_uncert", selected = c(0, "More than 20"))
+    updateSelectInput(session, inputId = "type_indicators", selected = rsl_indicator)
+
+  })
+  
+  
+  
   
   observe({
     if (nrow(data()) == 0) {
@@ -2073,7 +2052,12 @@ server <- function(input, output) {
   ####### MERGE SLIP TAB ######
   ##############################
   
+  
   # SLIP Filter
+  
+  
+  mySamplingStrategy <- "Regular sampling"
+  
   
   output$merge_tab_slip_filter <- renderUI({
     data_in_area_selection <- data_in_area$data %>% st_drop_geometry()
@@ -2111,34 +2095,7 @@ server <- function(input, output) {
       value = round((max_points + 100) / 2, -2)
     )
   })
-  
-  # Sampling strategy
-  
-  output$merge_tab_samplingstrategy <- renderUI({
-    num <- data_in_area_merging$num
-    
-    if (num == 0) {
-      pickerInput(
-        inputId = "samplingStrategy",
-        label = "📐 Sampling strategy",
-        choices = c("Regular sampling"),
-        selected = 'Regular sampling',
-        options = list(style = "btn-primary")
-      )
-      
-    }
-    else{
-      pickerInput(
-        inputId = "samplingStrategy",
-        label = "📐 Sampling strategy",
-        choices = c("Peak sampling", "Regular sampling"),
-        selected = 'Regular sampling',
-        options = list(style = "btn-primary")
-      )
-      
-    }
-  })
-  
+
   # Information Panel
   
   output$merge_tab_info_panel <- renderUI({
@@ -2265,16 +2222,8 @@ server <- function(input, output) {
   
   # Keep track of type of sampling
   
-  sampling_peaks <- reactiveValues(data = c())
+  sampling_peaks <- c()
   
-  observeEvent(c(input$samplingStrategy), {
-    if (input$samplingStrategy == 'Regular sampling') {
-      sampling_peaks$data <- c()
-    }
-    else{
-      sampling_peaks$data <- peak_ranges_spratt
-    }
-  })
   
   # Download menu
   
@@ -2609,7 +2558,6 @@ server <- function(input, output) {
     
       # Writing geojson with pointcloud processing metadata
       
-      #TRABAJO
       # Extracting parameters:
       
       ## Area
@@ -2655,7 +2603,7 @@ server <- function(input, output) {
       
       selected_slip <- paste(input$slip_selection, collapse = '/')
       points_per_slip <- input$points_per_slip
-      sampling_strategy <- input$samplingStrategy
+      sampling_strategy <- mySamplingStrategy
       
       #Create dataframe
       
@@ -2676,7 +2624,7 @@ server <- function(input, output) {
         rsl_indicator_type = rsl_filter,
         merging_slips = selected_slip,
         merging_points_per_slip = points_per_slip,
-        sampling_strategy = input$samplingStrategy
+        sampling_strategy = sampling_strategy
       )
       
       metadata_merging <- st_sf(df1, geometry = geom)
@@ -2710,7 +2658,7 @@ server <- function(input, output) {
       
       dockerfile  <- readLines("Dockerfile_container")
       peak_sampling <- 'T'
-      if (input$samplingStrategy != 'Peak sampling') {
+      if (mySamplingStrategy != 'Peak sampling') {
         peak_sampling <- 'F'
       }
       dockerfile[8] <-
