@@ -22,6 +22,7 @@ library(ggnewscale)
 library(ggiraph)
 library(pbapply)
 library(pracma)
+library(hexbin)
 
 # Import required functions
 
@@ -3035,19 +3036,15 @@ server <- function(input, output, session) {
             list(
               new_scale_color(),
               new_scale_fill(),
-              stat_density_2d(
+              geom_hex(
                 data = cloud,
                 aes(
                   x = AGE,
-                  y = RSL,
-                  fill = stat(nlevel),
-                  tooltip = paste("nlevel:", stat(nlevel))
+                  y = RSL
                 ),
-                geom = "interactive_polygon",
                 alpha = 0.7
               ),
-              scale_fill_viridis_c_interactive(tooltip = "nlevel"),
-              guides(color = "none")
+              scale_fill_viridis_c_interactive()
             )
         } +
         scale_x_reverse() +
