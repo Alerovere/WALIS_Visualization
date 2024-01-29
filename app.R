@@ -965,7 +965,7 @@ ui <-
     ##############################
     
     tabPanel(
-      title = "Merge SLIP",
+      title = "Merge SLIPs",
       value = "merge_slip",
       icon = icon("compress-arrows-alt"),
       dashboardPage(
@@ -1472,10 +1472,10 @@ server <- function(input, output, session) {
       options = providerTileOptions(
         updateWhenZooming = FALSE,
         updateWhenIdle = FALSE,
-        minZoom = 3,
+        minZoom = 1,
         maxZoom = 12
       )
-    ) %>% setView(7.595791257753539, 51.96953395614229, zoom = 3) %>% setMaxBounds(
+    ) %>% setView(7.595791257753539, 51.96953395614229, zoom = 1) %>% setMaxBounds(
       lng1 = -200,
       lat1 = -90,
       lng2 = 200,
@@ -1487,30 +1487,38 @@ server <- function(input, output, session) {
           icon = icon("globe-africa", "fa-2x"),
           title = "Center in Africa",
           onClick = JS(
-            "function(btn, map){map.setView(new L.LatLng(-1, 12),4);}"
+            "function(btn, map){map.setView(new L.LatLng(-1, 12),3);}"
           )
         ),
         easyButton(
           icon = icon("globe-asia", "fa-2x"),
           title = "Center in Asia",
           onClick = JS(
-            "function(btn, map){map.setView(new L.LatLng(19.7, 105.9),4);}"
+            "function(btn, map){map.setView(new L.LatLng(19.7, 105.9),3);}"
           )
         ),
         easyButton(
           icon = icon("globe-europe", "fa-2x"),
           title = "Center in Europe",
           onClick = JS(
-            "function(btn, map){map.setView(new L.LatLng(46.6, 13.3),4);}"
+            "function(btn, map){map.setView(new L.LatLng(46.6, 13.3),3);}"
           )
         ),
         easyButton(
           icon = icon("globe-americas", "fa-2x"),
           title = "Center in The Americas",
           onClick = JS(
-            "function(btn, map){map.setView(new L.LatLng(8.4, -79.5),4);}"
+            "function(btn, map){map.setView(new L.LatLng(8.4, -79.5),3);}"
+          )
+        ),
+        easyButton(
+          icon = icon("globe-oceania", "fa-2x"),
+          title = "Center in The Americas",
+          onClick = JS(
+            "function(btn, map){map.setView(new L.LatLng(-13, 131),3);}"
           )
         )
+        
       ) %>%
       addLayersControl(
         overlayGroups = unique(df$marker),
@@ -1571,7 +1579,7 @@ server <- function(input, output, session) {
         purrr::walk(function(df) {
           l <<- l %>% addAwesomeMarkers(
             data = rsl.df[[df]],
-            label =  ~ WALIS_ID,
+            label =  ~ paste(WALIS_ID,"- Click for info"),
             group = df,
             popup = ~ paste0(
               "<b>WALIS ID: </b>",
